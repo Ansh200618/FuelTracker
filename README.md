@@ -1,28 +1,5 @@
 # FuelTrack — India Route Optimizer
 
-<p align="center">
-  <svg width="320" viewBox="0 0 320 96" role="img" aria-label="FuelTrack Logo" xmlns="http://www.w3.org/2000/svg">
-    <title>FuelTrack Logo</title>
-    <defs>
-      <linearGradient id="ftStroke" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#fbbf24" />
-        <stop offset="100%" stop-color="#ea580c" />
-      </linearGradient>
-      <linearGradient id="ftFill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#fdba74" />
-        <stop offset="100%" stop-color="#f59e0b" />
-      </linearGradient>
-    </defs>
-    <rect x="4" y="4" width="88" height="88" rx="22" fill="#0b1526" stroke="#f59e0b55" stroke-width="2"/>
-    <path d="M48 22c8 11 14 17 14 28 0 9-7 16-16 16s-16-7-16-16c0-7 4-12 10-19 2 5 5 8 8 9 1-5 1-10 0-18z" fill="url(#ftFill)"/>
-    <path d="M30 70c7-8 15-8 23 0" fill="none" stroke="url(#ftStroke)" stroke-width="5" stroke-linecap="round"/>
-    <circle cx="30" cy="70" r="3" fill="#f59e0b"/>
-    <circle cx="53" cy="70" r="3" fill="#f59e0b"/>
-    <text x="108" y="47" fill="#f59e0b" font-size="30" font-weight="700" font-family="'JetBrains Mono', 'DM Sans', sans-serif" letter-spacing="1.2">FUELTRACK</text>
-    <text x="109" y="66" fill="#64748b" font-size="11" font-family="'DM Sans', sans-serif" letter-spacing="2.5">INDIA ROUTE OPTIMIZER</text>
-  </svg>
-</p>
-
 FuelTrack is a single-page web application designed to help users estimate and optimize trip expenses across Indian routes. It combines route intelligence, city-aware fuel rates, toll estimation, vehicle profiling, trip history, fuel logging, analytics, and an in-app AI assistant in a fast, client-side interface.
 
 Built as a standalone HTML application, FuelTrack runs directly in the browser without a backend server requirement for core functionality.
