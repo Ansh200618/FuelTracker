@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FuelTrack - India Route Optimizer</title>
+  
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#060b14;--l1:#0a1120;--l2:#0e1728;--l3:#131e35;--l4:#192640;
+      --bdr:#1d2d45;--bdr2:#263a58;
+      --amber:#f59e0b;--amberL:#fcd34d;--amberD:#d97706;
+      --ag:rgba(245,158,11,.1);
+      --teal:#14b8a6;--green:#10b981;--red:#f43f5e;--blue:#3b82f6;
+      --violet:#7c3aed;--cyan:#22d3ee;
+      --txt:#e2e8f7;--muted:#526a8a;--dim:#2a3c58;--faint:#162035;
+      --fn:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+      --rad:12px;--rad-sm:8px;--rad-lg:18px;
+    }
+    html,body{background:var(--bg);color:var(--txt);font-family:var(--fn);min-height:100vh;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:#f59e0b30;border-radius:99px}
+
+    .hdr{background:rgba(6,11,20,.94);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:400;backdrop-filter:blur(18px)}
+    .hdr-inner{max-width:1380px;margin:0 auto;padding:0 22px;height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .logo{display:flex;align-items:center;gap:10px}
+    .logo-gem{width:38px;height:38px;background:linear-gradient(135deg,#f59e0b,#ea580c);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 0 20px #f59e0b28}
+    .logo-name{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:1.5px;color:var(--amber)}
+    .logo-sub{font-size:7.5px;letter-spacing:3px;color:var(--muted);margin-top:-1px;text-transform:uppercase}
+    .hdr-pills{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .pill{background:var(--l2);border:1px solid var(--bdr);border-radius:20px;padding:5px 12px;font-size:11px;font-family:var(--mono);display:flex;align-items:center;gap:6px;white-space:nowrap}
+    .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+    .nav{max-width:1380px;margin:0 auto;padding:0 22px;display:flex;gap:0;border-bottom:1px solid var(--bdr);overflow-x:auto}
+    .ntab{background:none;border:none;cursor:pointer;color:var(--muted);font-family:var(--fn);font-weight:600;font-size:13px;padding:12px 18px;border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;display:flex;align-items:center;gap:6px}
+    .ntab:hover{color:var(--txt)}
+    .ntab.on{color:var(--amber);border-bottom-color:var(--amber)}
+    .nbadge{background:var(--ag);border:1px solid #f59e0b28;color:var(--amber);border-radius:10px;padding:1px 7px;font-size:10px;font-family:var(--mono)}
+
+    .wrap{max-width:1380px;margin:0 auto;padding:24px 22px}
+
+    .card{background:var(--l1);border:1px solid var(--bdr);border-radius:var(--rad);padding:20px;transition:border-color .2s}
+    .card-a{border-color:#f59e0b30;box-shadow:0 0 0 1px #f59e0b12,0 8px 32px #f59e0b08}
+    .ct{font-size:9.5px;font-weight:700;letter-spacing:1.3px;color:var(--muted);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:7px}
+    .ct-bar{width:3px;height:13px;border-radius:2px;flex-shrink:0}
+
+    .fld{margin-bottom:13px}
+    .lbl{display:block;font-size:9.5px;font-weight:700;letter-spacing:.8px;color:var(--muted);margin-bottom:5px;text-transform:uppercase}
+    .inp{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rad-sm);color:var(--txt);padding:10px 13px;font-family:var(--fn);font-size:13px;width:100%;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+    .inp:focus{border-color:#f59e0b50}
+    .inp::placeholder{color:var(--dim)}
+    .inp:disabled{opacity:.28;cursor:not-allowed}
+    .inp-m{font-family:var(--mono);font-size:12px}
+    select.inp{cursor:pointer;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23526a8a' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:12px}
+
+    .btn{background:linear-gradient(135deg,#f59e0b,#ea580c);border:none;border-radius:var(--rad-sm);color:#05080d;cursor:pointer;font-family:var(--fn);font-weight:700;font-size:13px;letter-spacing:.3px;padding:11px 22px;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+    .btn:hover:not(:disabled){opacity:.85;transform:translateY(-1px);box-shadow:0 6px 22px #f59e0b26}
+    .btn:active:not(:disabled){transform:none}
+    .btn:disabled{opacity:.22;cursor:not-allowed}
+    .btn-w{width:100%}
+    .btn-o{background:transparent;border:1px solid var(--bdr2);border-radius:var(--rad-sm);color:var(--muted);cursor:pointer;font-family:var(--fn);font-weight:600;font-size:13px;padding:10px 18px;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+    .btn-o:hover{background:var(--l3);color:var(--txt);border-color:#f59e0b40}
+    .btn-g{background:var(--l2);border:1px solid var(--bdr);border-radius:var(--rad-sm);color:var(--muted);cursor:pointer;font-family:var(--fn);font-weight:500;font-size:12px;padding:7px 13px;transition:all .13s;display:inline-flex;align-items:center;gap:6px;text-align:left}
+    .btn-g:hover{background:var(--l3);color:var(--txt);border-color:var(--bdr2)}
+
+    .sr{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--faint)}
+    .sr:last-child{border-bottom:none}
+    .sr-l{color:var(--muted);font-size:12px}
+    .sr-v{font-family:var(--mono);font-size:13px;font-weight:600}
+
+    .kpi{position:relative;overflow:hidden}
+    .kpi-ghost{position:absolute;top:-5px;right:-3px;font-size:50px;opacity:.055;pointer-events:none;user-select:none;filter:blur(1px)}
+    .kpi-val{font-family:var(--mono);font-size:23px;font-weight:700;line-height:1;margin-top:6px}
+    .kpi-lbl{font-size:11px;color:var(--muted);margin-top:5px}
+
+    .tag{padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+    .tg-a{background:#f59e0b12;color:var(--amber);border:1px solid #f59e0b22}
+    .tg-g{background:#10b98112;color:var(--green);border:1px solid #10b98122}
+    .tg-r{background:#f43f5e12;color:var(--red);border:1px solid #f43f5e22}
+    .tg-b{background:#3b82f612;color:var(--blue);border:1px solid #3b82f622}
+    .tg-t{background:#14b8a612;color:var(--teal);border:1px solid #14b8a622}
+    .tg-c{background:#22d3ee12;color:var(--cyan);border:1px solid #22d3ee22}
+
+    .pb{background:var(--faint);border-radius:99px;height:6px;overflow:hidden;margin-top:7px}
+    .pb-f{height:100%;border-radius:99px;transition:width .65s ease}
+
+    .steps{display:flex;align-items:flex-start;gap:0;margin-bottom:22px}
+    .s-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+    .s-wrap:hover .s-c:not(.active):not(.done){border-color:#f59e0b80;color:#f59e0b}
+    .s-c{width:29px;height:29px;border-radius:50%;border:2px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);transition:all .22s}
+    .s-c.done{background:var(--green);border-color:var(--green);color:#030f08}
+    .s-c.active{background:var(--amber);border-color:var(--amber);color:#060400;box-shadow:0 0 18px #f59e0b40}
+    .s-l{font-size:9px;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+    .s-l.active{color:var(--amber)}
+    .s-line{flex:1;height:2px;background:var(--bdr);margin-top:13px;transition:background .25s}
+    .s-line.done{background:var(--green)}
+
+    .mapwrap{position:relative;overflow:hidden;border-radius:var(--rad);background:var(--l1);border:1px solid var(--bdr)}
+    .mchip{background:rgba(6,11,20,.9);border:1px solid var(--bdr2);border-radius:var(--rad-sm);padding:7px 12px;font-family:var(--mono);font-size:11px;backdrop-filter:blur(10px);display:flex;align-items:center;gap:7px}
+    .moverlay{position:absolute;z-index:900;pointer-events:none}
+
+    .ram{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rad-sm);padding:14px 8px;text-align:center}
+    .ram-v{font-family:var(--mono);font-size:17px;font-weight:700;line-height:1}
+    .ram-l{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.3px}
+
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+
+    .tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .tbl th{text-align:left;padding:7px 13px;color:var(--muted);font-size:9px;letter-spacing:.9px;font-weight:700;border-bottom:1px solid var(--bdr);text-transform:uppercase}
+    .tbl td{padding:10px 13px;border-bottom:1px solid var(--faint)}
+    .tbl tr:last-child td{border-bottom:none}
+    .tbl tbody tr:hover td{background:var(--l2)50}
+
+    .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:42px 24px}
+
+    .bu{background:var(--ag);border:1px solid #f59e0b25;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:78%;align-self:flex-end;font-size:13px;line-height:1.7}
+    .ba{background:var(--l1);border:1px solid var(--bdr);border-radius:16px 16px 16px 4px;padding:10px 14px;max-width:86%;align-self:flex-start;font-size:13px;line-height:1.8;white-space:pre-wrap}
+
+    .sh h2{font-size:24px;font-weight:700;letter-spacing:.2px;margin-bottom:4px}
+    .sh p{color:var(--muted);font-size:12px}
+    .sh{margin-bottom:22px}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .fin{animation:fadeUp .24s ease-out}
+    @keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .65s linear infinite;display:inline-block}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}.pul{animation:pulse 1.4s ease-in-out infinite}
+    @keyframes glow{0%,100%{box-shadow:0 0 0 1px #f59e0b18,0 8px 32px #f59e0b08}50%{box-shadow:0 0 0 1px #f59e0b30,0 8px 40px #f59e0b15}}
+    .glow{animation:glow 2.5s ease-in-out infinite}
+
+    .leaflet-container{background:transparent!important;font-family:var(--mono)!important; z-index: 1;}
+    .leaflet-control-zoom a{background:var(--l2)!important;color:var(--muted)!important;border-color:var(--bdr)!important;font-size:16px!important}
+    .leaflet-control-zoom a:hover{background:var(--l3)!important;color:var(--txt)!important}
+    .leaflet-popup-content-wrapper{background:var(--l1)!important;border:1px solid var(--bdr)!important;border-radius:10px!important;box-shadow:0 8px 32px #0009!important;color:var(--txt)!important}
+    .leaflet-popup-tip{background:var(--l1)!important}
+    .leaflet-popup-content{margin:10px 14px!important;font-family:var(--mono)!important;font-size:12px!important}
+    .leaflet-popup-close-button{color:var(--muted)!important}
+
+    @media(max-width:1100px){.rp{grid-template-columns:340px 1fr!important}}
+    @media(max-width:920px){.rp,.chat-g,.g4{grid-template-columns:1fr!important}.g3{grid-template-columns:1fr 1fr!important}}
+    @media(max-width:620px){.g2,.g3{grid-template-columns:1fr!important}.wrap{padding:14px 14px}}
+  </style>
+</head>
+<body>
+
+  <!-- Static App Shell -->
+  <header class="hdr">
+    <div class="hdr-inner">
+      <div class="logo">
+        <div class="logo-gem">⛽</div>
+        <div>
+          <div class="logo-name">FUELTRACK</div>
+          <div class="logo-sub">India Route Optimizer</div>
+        </div>
+      </div>
+      <div class="hdr-pills">
+        <div class="pill">
+          <div class="dot" style="background:var(--green)"></div>
+          <span id="hdr_vkey" style="font-family:var(--mono);color:var(--green);font-size:10px">🚗 Hatchback</span>
+        </div>
+        <div class="pill">
+          <span id="hdr_trips_count" style="color:var(--muted);font-size:10px">0 trips ·</span>
+          <span id="hdr_total_spend" style="color:var(--amber);font-weight:700">₹0</span>
+        </div>
+        <div class="pill">
+          <div id="hdr_map_dot" class="dot" style="background:var(--teal)"></div>
+          <span id="hdr_map_txt" style="color:var(--teal);font-size:10px">Map Live</span>
+        </div>
+      </div>
+    </div>
+    <nav class="nav" id="main_nav"></nav>
+  </header>
+
+  <div class="wrap">
+    <!-- TAB: ROUTE -->
+    <div id="tab_route" style="display:none">
+      <div class="fin">
+        <div class="sh">
+          <h2>Route Planner</h2>
+          <p>Step-by-step trip configuration · Live map routing · Full cost breakdown</p>
+        </div>
+        <div class="rp" style="display:grid;grid-template-columns:358px 1fr;gap:18px;align-items:start">
+          <div id="route_left_pane" style="display:flex;flex-direction:column;gap:14px"></div>
+          
+          <div class="mapwrap" style="height:calc(100vh - 190px);min-height:580px;position:sticky;top:112px">
+            <div id="map_overlays"></div>
+            <div id="map" style="width:100%;height:100%"></div>
+            <div id="map_empty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: FUEL LOGS -->
+    <div id="tab_fuellogs" style="display:none"></div>
+    
+    <!-- TAB: DASHBOARD -->
+    <div id="tab_dashboard" style="display:none"></div>
+    
+    <!-- TAB: ANALYTICS -->
+    <div id="tab_analytics" style="display:none"></div>
+    
+    <!-- TAB: AI -->
+    <div id="tab_ai" style="display:none"></div>
+  </div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL CONFIG & DATA
+═══════════════════════════════════════════════════════════ */
+// The execution environment provides the API key dynamically
+const apiKey = "AIzaSyBuu01BaaIIIU_x9i02pInXtGRP_EsT2lw"; 
+
+const LOCATION_SEARCH_DEBOUNCE_MS = 250;
+const CONFIG = {
+  TOLLGURU_API:    "YOUR_TOLLGURU_KEY", // Replace with real key for live toll prices
+  MAPPLS_REST_API: "7cd80c42eece12ac9b848c02b77f45ac",
+};
+
+const CITIES = {
+  delhi:{lat:28.6139,lng:77.2090},noida:{lat:28.5355,lng:77.3910},
+  gurgaon:{lat:28.4595,lng:77.0266},faridabad:{lat:28.4089,lng:77.3178},
+  mumbai:{lat:19.0760,lng:72.8777},pune:{lat:18.5204,lng:73.8567},
+  nashik:{lat:19.9975,lng:73.7898},nagpur:{lat:21.1458,lng:79.0882},
+  aurangabad:{lat:19.8762,lng:75.3433},
+  bangalore:{lat:12.9716,lng:77.5946},bengaluru:{lat:12.9716,lng:77.5946},
+  mysore:{lat:12.2958,lng:76.6394},hubli:{lat:15.3647,lng:75.1240},
+  mangalore:{lat:12.9141,lng:74.8560},
+  chennai:{lat:13.0827,lng:80.2707},coimbatore:{lat:11.0168,lng:76.9558},
+  madurai:{lat:9.9252,lng:78.1198},trichy:{lat:10.7905,lng:78.7047},
+  hyderabad:{lat:17.3850,lng:78.4867},visakhapatnam:{lat:17.6868,lng:83.2185},
+  vijayawada:{lat:16.5062,lng:80.6480},warangal:{lat:17.9784,lng:79.5941},
+  kolkata:{lat:22.5726,lng:88.3639},siliguri:{lat:26.7271,lng:88.3953},
+  durgapur:{lat:23.5204,lng:87.3119},
+  ahmedabad:{lat:23.0225,lng:72.5714},surat:{lat:21.1702,lng:72.8311},
+  vadodara:{lat:22.3072,lng:73.1812},rajkot:{lat:22.3039,lng:70.8022},
+  jaipur:{lat:26.9124,lng:75.7873},jodhpur:{lat:26.2389,lng:73.0243},
+  udaipur:{lat:24.5854,lng:73.7125},kota:{lat:25.2138,lng:75.8648},
+  ajmer:{lat:26.4499,lng:74.6399},bikaner:{lat:28.0229,lng:73.3119},
+  lucknow:{lat:26.8467,lng:80.9462},kanpur:{lat:26.4499,lng:80.3319},
+  agra:{lat:27.1767,lng:78.0081},varanasi:{lat:25.3176,lng:82.9739},
+  prayagraj:{lat:25.4358,lng:81.8463},meerut:{lat:28.9845,lng:77.7064},
+  gorakhpur:{lat:26.7606,lng:83.3732},
+  chandigarh:{lat:30.7333,lng:76.7794},amritsar:{lat:31.6340,lng:74.8723},
+  ludhiana:{lat:30.9010,lng:75.8573},jalandhar:{lat:31.3260,lng:75.5762},
+  mohali:{lat:30.7046,lng:76.7179},
+  bhopal:{lat:23.2599,lng:77.4126},indore:{lat:22.7196,lng:75.8577},
+  gwalior:{lat:26.2183,lng:78.1828},jabalpur:{lat:23.1815,lng:79.9864},
+  patna:{lat:25.5941,lng:85.1376},ranchi:{lat:23.3441,lng:85.3096},
+  jamshedpur:{lat:22.8046,lng:86.2029},raipur:{lat:21.2514,lng:81.6296},
+  bhubaneswar:{lat:20.2961,lng:85.8189},
+  kochi:{lat:9.9312,lng:76.2673},thiruvananthapuram:{lat:8.5241,lng:76.9366},
+  kozhikode:{lat:11.2588,lng:75.7804},thrissur:{lat:10.5276,lng:76.2144},
+  dehradun:{lat:30.3165,lng:78.0322},haridwar:{lat:29.9457,lng:78.1642},
+  shimla:{lat:31.1048,lng:77.1734},jammu:{lat:32.7266,lng:74.8570},
+  srinagar:{lat:34.0837,lng:74.7973},
+  guwahati:{lat:26.1445,lng:91.7362},shillong:{lat:25.5788,lng:91.8933},
+};
+
+function parseLocationParts(input="") {
+  const parts = (input || "").split(",").map(p=>p.trim()).filter(Boolean);
+  const city = parts[0] || "";
+  const country = parts.length ? parts[parts.length-1] : "";
+  const state = parts.length >= 3 ? parts[parts.length-2] : "";
+  return { city, state, country, displayName: parts.join(", ") };
+}
+
+function toTitleCase(str="") {
+  return (str || "").split(/\s+/).filter(Boolean).map(s => s[0] ? (s[0].toUpperCase() + s.slice(1)) : "").join(" ");
+}
+
+function findCoords(city="") {
+  const raw = (city || "").trim();
+  const c = raw.toLowerCase().replace(/,.*$/, "");
+  const parsed = parseLocationParts(raw);
+  for (const [k, v] of Object.entries(CITIES)) {
+    if (c === k || c.startsWith(k) || k.startsWith(c)) {
+      return {
+        ...v,
+        found:true,
+        city: parsed.city || toTitleCase(k),
+        state: parsed.state || "",
+        country: parsed.country || "India",
+        displayName: parsed.displayName || raw
+      };
+    }
+  }
+  return { lat:null, lng:null, found:false, ...parsed };
+}
+
+function normalizeCityKey(city="") {
+  return (city || "").toLowerCase().replace(/,.*$/, "").trim();
+}
+
+const DEFAULT_RATES = {
+  delhi: { petrol: 94.72, diesel: 87.62, cng: 74.09 },
+  mumbai: { petrol: 104.21, diesel: 92.15, cng: 73.50 },
+  bangalore: { petrol: 102.84, diesel: 88.95, cng: 82.50 },
+  bengaluru: { petrol: 102.84, diesel: 88.95, cng: 82.50 },
+  chennai: { petrol: 100.75, diesel: 92.34, cng: 82.00 },
+  kolkata: { petrol: 103.94, diesel: 90.76, cng: 85.00 },
+  hyderabad: { petrol: 107.41, diesel: 95.65, cng: 90.00 },
+  pune: { petrol: 104.08, diesel: 90.62, cng: 87.00 },
+  ahmedabad: { petrol: 94.44, diesel: 90.11, cng: 74.00 },
+  jaipur: { petrol: 104.88, diesel: 90.36, cng: 85.00 },
+  lucknow: { petrol: 94.65, diesel: 87.76, cng: 91.00 },
+  chandigarh: { petrol: 94.24, diesel: 82.40, cng: 87.00 },
+  default: { petrol: 100.00, diesel: 90.00, cng: 80.00 }
+};
+
+function getFuelPrice(city="", type="petrol") {
+  if (type === "electric") return 0;
+  const c = normalizeCityKey(city);
+  
+  if (c && Array.isArray(state?.fuelLog)) {
+    const match = state.fuelLog.find(e => normalizeCityKey(e.city) === c && e.fuelType === type && Number(e.priceL) > 0);
+    if (match) return Number(match.priceL);
+  }
+  
+  if (c && DEFAULT_RATES[c] && DEFAULT_RATES[c][type]) {
+    return DEFAULT_RATES[c][type];
+  }
+  
+  return DEFAULT_RATES.default[type] || null;
+}
+
+function getKnownToll(fromCity, toCity, tollMultiplier = 1.0) {
+  const f = normalizeCityKey(fromCity);
+  const t = normalizeCityKey(toCity);
+  if (!f || !t) return null;
+  
+  // Sort cities alphabetically so A->B and B->A always match the same key
+  const routeKey = [f, t].sort().join('-');
+  
+  // Real-world NHAI / Expressway toll prices for standard Cars (₹)
+  const knownTolls = {
+    'delhi-jaipur': 235,
+    'mumbai-pune': 320,
+    'agra-delhi': 510,
+    'agra-lucknow': 655,
+    'bangalore-hyderabad': 930,
+    'bengaluru-hyderabad': 930,
+    'bangalore-chennai': 480,
+    'bengaluru-chennai': 480,
+    'chandigarh-delhi': 310,
+    'ahmedabad-vadodara': 135,
+    'delhi-meerut': 160,
+    'mumbai-nashik': 140,
+    'bangalore-mysore': 320,
+    'bengaluru-mysore': 320,
+    'chennai-coimbatore': 450,
+    'lucknow-varanasi': 350,
+    'ahmedabad-surat': 250,
+    'dehradun-delhi': 180,
+    'hyderabad-vijayawada': 360,
+    'mumbai-surat': 310,
+    'delhi-ludhiana': 380,
+  };
+
+  const baseToll = knownTolls[routeKey];
+  if (baseToll !== undefined) {
+    // Multiply base car toll by the vehicle class multiplier (e.g. SUV is 1.5x)
+    return Math.round(baseToll * tollMultiplier);
+  }
+  return null;
+}
+
+const VEHICLES = {
+  hatchback: {label:"Hatchback (Swift, i20, Baleno)", group:"Personal Cars", icon:"🚗",mileage:18,fuelType:"petrol",tollM:1.0, tollClass: "Car"},
+  sedan:     {label:"Sedan (City, Dzire, Verna)",     group:"Personal Cars", icon:"🚗",mileage:15,fuelType:"petrol",tollM:1.0, tollClass: "Car"},
+  suv:       {label:"SUV (Creta, Nexon, Fortuner)",   group:"Personal Cars", icon:"🛻",mileage:12,fuelType:"petrol",tollM:1.5, tollClass: "SUV"},
+  luxury:    {label:"Luxury Car (BMW, Mercedes)",     group:"Personal Cars", icon:"🏎️",mileage:9, fuelType:"petrol",tollM:1.5, tollClass: "Car"},
+  
+  bike100:   {label:"Standard Bike / Scooty (Activa)",group:"Two Wheelers",  icon:"🏍️",mileage:55,fuelType:"petrol",tollM:0.4, tollClass: "Motorcycle"},
+  bike200:   {label:"Sports Bike (Duke, Enfield)",    group:"Two Wheelers",  icon:"🏍️",mileage:32,fuelType:"petrol",tollM:0.4, tollClass: "Motorcycle"},
+  
+  ecar:      {label:"Electric Car (Nexon EV, Tiago)", group:"Electric (EV)", icon:"⚡",mileage:0, fuelType:"electric",tollM:1.0,cpk:1.1, tollClass: "Car"},
+  ebike:     {label:"Electric Scooter (Ola, Ather)",  group:"Electric (EV)", icon:"⚡",mileage:0, fuelType:"electric",tollM:0.2,cpk:0.5, tollClass: "Motorcycle"},
+  
+  autorick:  {label:"Auto Rickshaw (CNG)",            group:"Commercial",    icon:"🛺",mileage:28,fuelType:"cng",    tollM:0.5, tollClass: "Auto"},
+  pickup:    {label:"Pickup Truck (Bolero Camper)",   group:"Commercial",    icon:"🚚",mileage:10,fuelType:"diesel",  tollM:1.8, tollClass: "LCV"},
+  minitruck: {label:"Mini Truck (Tata Ace, Dost)",    group:"Commercial",    icon:"🚛",mileage:14,fuelType:"diesel",  tollM:1.5, tollClass: "LCV"},
+  truck2:    {label:"Standard Truck (6 Tyres)",       group:"Commercial",    icon:"🚛",mileage:8, fuelType:"diesel",  tollM:2.5, tollClass: "Truck"},
+  truck3:    {label:"Heavy Truck (10 Tyres)",         group:"Commercial",    icon:"🚛",mileage:6, fuelType:"diesel",  tollM:3.2, tollClass: "Truck"},
+  truckmulti:{label:"Multi-Axle Trailer (14+ Tyres)", group:"Commercial",    icon:"🚛",mileage:4, fuelType:"diesel",  tollM:4.5, tollClass: "Truck"},
+  bus2:      {label:"Standard Bus",                   group:"Commercial",    icon:"🚌",mileage:6, fuelType:"diesel",  tollM:2.0, tollClass: "Bus"},
+  volvo:     {label:"Volvo / AC Coach Bus",           group:"Commercial",    icon:"🚌",mileage:5, fuelType:"diesel",  tollM:2.8, tollClass: "Bus"},
+  tractor:   {label:"Tractor",                        group:"Commercial",    icon:"🚜",mileage:8, fuelType:"diesel",  tollM:0.8, tollClass: "Tractor"},
+};
+
+/* ═══════════════════════════════════════════════════════════
+   SERVICE LAYER
+═══════════════════════════════════════════════════════════ */
+function haversineKm(a,b) {
+  const R=6371, dLat=(b.lat-a.lat)*Math.PI/180, dLng=(b.lng-a.lng)*Math.PI/180;
+  const x=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+
+function buildWaypoints(a,b,km) {
+  const pts=[{lat:a.lat,lng:a.lng}];
+  const n=Math.min(7,Math.max(3,Math.floor(km/80)));
+  for (let i=1;i<n;i++) {
+    const t=i/n;
+    pts.push({
+      lat:a.lat+(b.lat-a.lat)*t,
+      lng:a.lng+(b.lng-a.lng)*t,
+    });
+  }
+  pts.push({lat:b.lat,lng:b.lng});
+  return pts;
+}
+
+function efficiencyRating(mileage,fuelType) {
+  if (fuelType==="electric") return {label:"EV — Zero Emission",pct:100,color:"#22d3ee",grade:"S"};
+  if (mileage>=25) return {label:"Excellent",pct:88,color:"#10b981",grade:"A+"};
+  if (mileage>=18) return {label:"Very Good", pct:72,color:"#10b981",grade:"A"};
+  if (mileage>=13) return {label:"Good",      pct:55,color:"#f59e0b",grade:"B"};
+  if (mileage>=9)  return {label:"Average",   pct:37,color:"#f97316",grade:"C"};
+  return               {label:"Low",       pct:18,color:"#f43f5e",grade:"D"};
+}
+
+async function fetchJsonWithTimeout(url, opts={}, timeoutMs=10000) {
+  const c = new AbortController();
+  const t = setTimeout(()=>c.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, {...opts, signal:c.signal});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+
+function parseMaybeNum(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function normalizeCoords(p) {
+  const lat = parseMaybeNum(p?.lat ?? p?.latitude ?? p?.y);
+  const lng = parseMaybeNum(p?.lng ?? p?.lon ?? p?.longitude ?? p?.x);
+  if (!isValidCoord(lat, lng)) return null;
+  return {lat, lng, found:true};
+}
+
+function normalizePlaceResult(p) {
+  const c = normalizeCoords(p);
+  if (!c) return null;
+  const parsed = parseLocationParts(p?.display_name || "");
+  return { ...c, ...parsed };
+}
+
+function isValidCoord(lat, lng) {
+  return Number.isFinite(lat) && Number.isFinite(lng) && lat>=-90 && lat<=90 && lng>=-180 && lng<=180;
+}
+
+async function geocodeWithNominatim(query) {
+  const q = (query||"").trim();
+  if (!q) return null;
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=in&q=${encodeURIComponent(q)}`;
+    const data = await fetchJsonWithTimeout(url, { headers: { "Accept":"application/json" } }, 12000);
+    const first = Array.isArray(data) ? data[0] : null;
+    return normalizePlaceResult(first);
+  } catch(_) { return null; }
+}
+
+async function resolveCoords(place) {
+  const mapped = findCoords(place);
+  if (mapped.found) return mapped;
+  return (await geocodeWithNominatim(place)) || mapped;
+}
+
+// REAL API INTEGRATION 1: MAPPLS ROUTING
+async function fetchRouteMappls(a,b) {
+  if (!CONFIG.MAPPLS_REST_API) return null;
+  if (!isValidCoord(a?.lat, a?.lng) || !isValidCoord(b?.lat, b?.lng)) return null;
+  try {
+    const routePath = `https://apis.mappls.com/advancedmaps/v1/${encodeURIComponent(CONFIG.MAPPLS_REST_API)}/route_adv/driving/${a.lng},${a.lat};${b.lng},${b.lat}`;
+    const url = `${routePath}?alternatives=true&steps=false&overview=full&geometries=geojson`;
+    const data = await fetchJsonWithTimeout(url, {}, 12000);
+    const routes = Array.isArray(data?.routes) ? data.routes : [];
+    const route = routes
+      .map(r => ({
+        route: r,
+        distM: parseMaybeNum(r?.distance),
+        durS: parseMaybeNum(r?.duration),
+        waypoints: toWaypoints(r?.geometry?.coordinates)
+      }))
+      .filter(r => r.distM && r.durS)
+      .sort((x,y)=>(x.distM-y.distM) || (x.durS-y.durS))[0];
+    if (!route) return null;
+    return {
+      km: Math.round(route.distM/1000),
+      durationMin: Math.max(1, Math.round(route.durS/60)),
+      waypoints: route.waypoints?.length>1 ? route.waypoints : null
+    };
+  } catch(_) { return null; }
+}
+
+// REAL API INTEGRATION 2: OSRM ROUTING (Free & Open Source)
+async function fetchRouteOsrm(a,b) {
+  if (!isValidCoord(a?.lat, a?.lng) || !isValidCoord(b?.lat, b?.lng)) return null;
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${a.lng},${a.lat};${b.lng},${b.lat}?overview=full&geometries=geojson&alternatives=true`;
+    const data = await fetchJsonWithTimeout(url, {}, 12000);
+    const routes = Array.isArray(data?.routes) ? data.routes : [];
+    const route = routes
+      .map(r => ({
+        route: r,
+        distM: parseMaybeNum(r?.distance),
+        durS: parseMaybeNum(r?.duration),
+        waypoints: toWaypoints(r?.geometry?.coordinates)
+      }))
+      .filter(r => r.distM && r.durS)
+      .sort((x,y)=>(x.distM-y.distM) || (x.durS-y.durS))[0];
+    if (!route) return null;
+    return {
+      km: Math.round(route.distM/1000),
+      durationMin: Math.max(1, Math.round(route.durS/60)),
+      waypoints: route.waypoints?.length>1 ? route.waypoints : null
+    };
+  } catch(_) { return null; }
+}
+
+// API INTEGRATION 3: TOLL GURU PREPARATION
+async function fetchTollGuruCost(waypoints, vehicleClass) {
+  if(CONFIG.TOLLGURU_API === "YOUR_TOLLGURU_KEY" || !waypoints) return null;
+  // If the user inputs a real API key, this will execute properly
+  try {
+    const url = `https://apis.tollguru.com/toll/v2/origin-destination-waypoints`;
+    const payload = {
+      from: { lat: waypoints[0].lat, lng: waypoints[0].lng },
+      to: { lat: waypoints[waypoints.length-1].lat, lng: waypoints[waypoints.length-1].lng },
+      vehicle: { type: vehicleClass }
+    };
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": CONFIG.TOLLGURU_API },
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) return null;
+    const data = await res.json();
+    return Math.round(data.routes[0].costs.minimumTollCost);
+  } catch(e) {
+    return null; 
+  }
+}
+
+function pickBestRoute(routes=[]) {
+  const valid = routes.filter(r => r && Number.isFinite(r.km) && r.km > 0 && Number.isFinite(r.durationMin) && r.durationMin > 0);
+  if (!valid.length) return null;
+  return valid.sort((a,b)=>(a.km-b.km) || (a.durationMin-b.durationMin))[0];
+}
+
+const routeService = async (from, to, vKey, customRate, customMileage) => {
+  const c1 = await resolveCoords(from);
+  const c2 = await resolveCoords(to);
+  if (!c1?.found || !c2?.found) {
+    const missing = [];
+    if (!c1?.found) missing.push("origin");
+    if (!c2?.found) missing.push("destination");
+    throw new Error(`Could not locate ${missing.join(" and ")}. Please verify your input.`);
+  }
+  
+  // Fetch routing
+  const [mapplsRoute, osrmRoute] = await Promise.all([fetchRouteMappls(c1,c2), fetchRouteOsrm(c1,c2)]);
+  const route = pickBestRoute([mapplsRoute, osrmRoute]);
+  
+  const straight = haversineKm(c1,c2);
+  const km = (route?.km && route.km>0) ? route.km : Math.round(straight*1.27);
+  const v = VEHICLES[vKey];
+  const rate = (v.fuelType==="electric") ? 0 : (customRate ?? getFuelPrice(from, v.fuelType));
+  const usedMileage = customMileage||v.mileage;
+  const fuelCost = v.fuelType==="electric"?Math.round(km*(v.cpk||1)):Math.round((km/usedMileage)*rate);
+  const fuelUsed = v.fuelType==="electric"?0:+(km/usedMileage).toFixed(1);
+  const durationMin = route?.durationMin||Math.round(km/72*60);
+  const hrs = Math.floor(durationMin/60), rem = durationMin%60;
+  const wpts = route?.waypoints||buildWaypoints(c1,c2,km);
+
+  // Fetch or Estimate Toll
+  const realToll = await fetchTollGuruCost(wpts, v.tollClass);
+  const knownToll = getKnownToll(from, to, v.tollM);
+  
+  // Logic: Use paid API if available -> Else use hardcoded real routes -> Else use fallback math
+  let toll = 0;
+  if (realToll !== null) {
+      toll = realToll;
+  } else if (knownToll !== null) {
+      toll = knownToll;
+  } else {
+      // Realistic Estimation: Assume first 40km is city/state. Beyond that, assume 75% is tolled highway at avg ₹1.8/km
+      toll = km > 40 ? Math.round((km * 0.75) * 1.8 * v.tollM) : 0;
+  }
+  
+  const tollFreeCost = Math.round(fuelCost*1.09);
+
+  return {
+    km, fuelCost, fuelUsed, toll, total:fuelCost+toll,
+    tollFreeTotal:tollFreeCost, saving:fuelCost+toll-tollFreeCost,
+    rate, fuelType:v.fuelType, mileage:usedMileage,
+    duration:`${hrs>0?hrs+"h ":""}${rem}m`,
+    cpkm:((fuelCost+toll)/km).toFixed(2),
+    from, to, vKey,
+    fromCoords:c1, toCoords:c2,
+    fromMeta:{ city:c1.city||"", state:c1.state||"", country:c1.country||"India" },
+    toMeta:{ city:c2.city||"", state:c2.state||"", country:c2.country||"India" },
+    waypoints: wpts,
+    eff:efficiencyRating(usedMileage,v.fuelType),
+  };
+};
+
+// STATIC FALLBACK IF GEMINI UNAVAILABLE
+const AI_FN_FALLBACK = (q) => {
+  const lo=q.toLowerCase();
+  if (/mileage|efficiency|fuel saving|improve/i.test(lo))
+    return "🔧 **Mileage Tips:** Tyre pressure, optimal speed 60–80 km/h, gentle acceleration, clean air filters.";
+  if (/toll|fastag|nhai|plaza/i.test(lo))
+    return "🛣️ **FASTag Guide:** FASTag is mandatory. Keep wallet ≥ ₹200. EVs have toll exemptions in some states.";
+  return "🤖 **FuelTrack AI is offline.** I can't generate live responses without my API key, but I'm ready when you are!";
+};
+
+// REAL API INTEGRATION 4: GEMINI 2.5 FLASH AI
+const chatService = async (msgs) => {
+  if (!apiKey) {
+    await new Promise(r=>setTimeout(r,700+Math.random()*500));
+    return AI_FN_FALLBACK(msgs[msgs.length-1]?.content||"");
+  }
+
+  const systemInstruction = "You are FuelTrack AI, a strict expert on Indian roads, tolls, EVs, and fuel. You MUST ONLY answer questions related to driving, vehicles, fuel prices, tolls, and routes. If the user asks about ANYTHING ELSE (e.g., coding, general knowledge, math, politics, recipes), politely refuse to answer and remind them you are specifically a Fuel & Route assistant. Keep formatting clean. Max 4 sentences.";
+  const promptText = msgs.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join("\n") + "\nAssistant:";
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+  const payload = {
+    contents: [{ parts: [{ text: promptText }] }],
+    systemInstruction: { parts: [{ text: systemInstruction }] }
+  };
+
+  // Exponential backoff
+  const delays = [1000, 2000, 4000, 8000, 16000];
+  for (let i = 0; i < 5; i++) {
+    try {
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Hmm, I couldn't formulate a response.";
+    } catch(err) {
+      if (i === 4) return "⚠️ Error connecting to Gemini AI. Please try again later.";
+      await new Promise(r => setTimeout(r, delays[i]));
+    }
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════
+   APP STATE & RENDER
+═══════════════════════════════════════════════════════════ */
+const state = {
+  tab: "route",
+  vKey: "hatchback",
+  trips: [],
+  fuelLog: [],
+  
+  step: 0,
+  rFrom: "",
+  rTo: "",
+  rFuelType: "petrol",
+  rRate: "",
+  rMileage: 18,
+  rLoading: false,
+  rResult: null,
+  rErr: "",
+  
+  flDate: new Date().toISOString().slice(0,10),
+  flFuelType: "petrol",
+  flLitres: "",
+  flPriceL: "",
+  flCity: "Delhi",
+  flOk: false,
+  
+  msgs: [{role:"assistant", content:"Namaste! 🙏 I'm your Fuel & Route AI.\n\nAsk me anything — fuel prices, toll rates, mileage tips, EV economics, Indian highway routes."}],
+  chatIn: "",
+  chatBusy: false,
+
+  leafReady: false
+};
+
+const PC=["#f59e0b","#f43f5e","#14b8a6","#7c3aed","#3b82f6"];
+const locationHints = { rFrom:[], rTo:[] };
+const locationStatus = { rFrom:null, rTo:null };
+const hintTimers = { rFrom:null, rTo:null };
+const hintReqSeq = { rFrom:0, rTo:0 };
+
+let mapInstance = null;
+let mapLayers = {poly:null, mA:null, mB:null};
+let areaChartInst = null;
+let pieChartInst = null;
+let barChartInst = null;
+let renderDebounceTimer = null;
+
+function escapeHTML(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* UI Builders */
+const CT = (ch, color="amber") => {
+  const colors={amber:"#f59e0b",teal:"#14b8a6",green:"#10b981",red:"#f43f5e",blue:"#3b82f6",violet:"#7c3aed",cyan:"#22d3ee"};
+  return `<div class="ct"><div class="ct-bar" style="background:${colors[color]||colors.amber}"></div>${ch}</div>`;
+};
+const SR = (label, value, color, sub) => `
+  <div class="sr">
+    <div><span class="sr-l">${label}</span>${sub?`<div style="font-size:10px;color:var(--dim);margin-top:1px">${sub}</div>`:''}</div>
+    <span class="sr-v" style="color:${color||"var(--txt)"}">${value}</span>
+  </div>
+`;
+const SH = (title, sub) => `<div class="sh"><h2>${title}</h2>${sub?`<p>${sub}</p>`:''}</div>`;
+const Pbar = (pct, color) => `
+  <div class="pb"><div class="pb-f" style="width:${Math.min(pct||0,100)}%;background:${color||"linear-gradient(90deg,#f43f5e,#f59e0b,#10b981)"}"></div></div>
+`;
+const Steps = (cur, labels) => `
+  <div class="steps">
+    ${labels.map((l,i) => `
+      ${i>0 ? `<div class="s-line${i<=cur?' done':''}"></div>` : ''}
+      <div class="s-wrap" onclick="updateState('step', ${i})">
+        <div class="s-c${i<cur?' done':i===cur?' active':''}">${i<cur?'✓':i+1}</div>
+        <div class="s-l${i===cur?' active':''}">${l}</div>
+      </div>
+    `).join('')}
+  </div>
+`;
+
+/* Derived State */
+function getStats() {
+  const tf = state.trips.reduce((s,t)=>s+t.fuelCost,0);
+  const tt = state.trips.reduce((s,t)=>s+t.toll,0);
+  const td = state.trips.reduce((s,t)=>s+t.km,0);
+  const fls = state.fuelLog.reduce((s,e)=>s+e.total,0);
+  const flL = state.fuelLog.reduce((s,e)=>s+e.litres,0);
+  return {tf, tt, td, fls, flL, total: tf+tt+fls, avgP: flL?fls/flL:0};
+}
+
+function getMonthly() {
+  const m = {};
+  state.trips.forEach(t=>{const k=t.date.slice(0,7);if(!m[k])m[k]={month:k.slice(5),fuel:0,toll:0};m[k].fuel+=t.fuelCost;m[k].toll+=t.toll;});
+  state.fuelLog.forEach(e=>{const k=e.date.slice(0,7);if(!m[k])m[k]={month:k.slice(5),fuel:0,toll:0};m[k].fuel+=e.total;});
+  return Object.values(m).sort((a,b)=>a.month.localeCompare(b.month)).slice(-7);
+}
+
+function getKnownCities() {
+  const c = new Set();
+  state.fuelLog.forEach(e => { if (e.city) c.add(toTitleCase(normalizeCityKey(e.city))); });
+  state.trips.forEach(t => {
+    if (t.from) c.add(toTitleCase(normalizeCityKey(t.from)));
+    if (t.to) c.add(toTitleCase(normalizeCityKey(t.to)));
+  });
+  return [...c].filter(Boolean).sort((a,b)=>a.localeCompare(b));
+}
+
+async function searchLocationHints(query) {
+  const q = (query || "").trim();
+  if (q.length < 2) return [];
+  const hints = [];
+
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&countrycodes=in&q=${encodeURIComponent(q)}`;
+    const data = await fetchJsonWithTimeout(url, { headers: { "Accept":"application/json" } }, 8000);
+    (Array.isArray(data)?data:[]).forEach(s => {
+      const location = normalizePlaceResult(s);
+      if (location?.displayName) hints.push(location);
+    });
+  } catch(_) {}
+
+  const seen = new Set();
+  return hints.filter(h => {
+    const key = (h.displayName || "").toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 8);
+}
+
+function deriveLocationStatus(query, hints=[]) {
+  const q = (query || "").trim().toLowerCase();
+  if (!q || q.length < 2) return null;
+  const exact = hints.find(h => ((h.displayName || "").toLowerCase() === q) || ((h.city || "").toLowerCase() === q));
+  const candidate = exact || hints[0];
+  if (!candidate) return null;
+  return { located:true, city:candidate.city||"", state:candidate.state||"", country:candidate.country||"", displayName:candidate.displayName||"" };
+}
+
+function updateLocationDOM(field) {
+  const list = document.getElementById('lst_' + field);
+  if (list && locationHints[field]) {
+    list.innerHTML = locationHints[field].map(h=>`<option value="${escapeHTML(h.displayName)}"></option>`).join("");
+  }
+  const statusDiv = document.getElementById('status_' + field);
+  if (statusDiv) {
+    const s = locationStatus[field];
+    if (state[field]) {
+       if (s?.located) {
+           const rate = getFuelPrice(state[field], "petrol");
+           statusDiv.innerHTML = `<div style="font-size:10px;color:var(--green);margin-top:4px;font-family:var(--mono)">✓ Located · City: ${escapeHTML(s.city||"-")} · State: ${escapeHTML(s.state||"-")} · Country: ${escapeHTML(s.country||"-")} · ${Number.isFinite(rate) ? `Est. petrol ₹${rate}/L` : "No petrol rate found"}</div>`;
+       } else {
+           statusDiv.innerHTML = `<div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono)">Searching…</div>`;
+       }
+    } else {
+       statusDiv.innerHTML = '';
+    }
+  }
+}
+
+function refreshHints(field) {
+  const q = state[field] || "";
+  const reqId = ++hintReqSeq[field];
+  clearTimeout(hintTimers[field]);
+  hintTimers[field] = setTimeout(async () => {
+    const hints = await searchLocationHints(q);
+    if (reqId !== hintReqSeq[field]) return;
+    locationHints[field] = hints;
+    locationStatus[field] = deriveLocationStatus(q, hints);
+    if ((state[field] || "") === q) updateLocationDOM(field);
+  }, LOCATION_SEARCH_DEBOUNCE_MS);
+}
+
+window.setLocationField = (field, val) => {
+  state[field] = val;
+  state.rResult = null;
+  state.rErr = "";
+  const mapped = findCoords(val);
+  locationStatus[field] = mapped?.found ? {
+    located:true,
+    city:mapped.city||"",
+    state:mapped.state||"",
+    country:mapped.country||"",
+    displayName:mapped.displayName||""
+  } : null;
+  resetRouteMap();
+  updateLocationDOM(field);
+  refreshHints(field);
+};
+
+/* Actions */
+window.updateState = (key, val, skipRender = false) => {
+  state[key] = val;
+  if(key === 'vKey') {
+    state.rMileage = VEHICLES[val].mileage || 15;
+    state.rFuelType = VEHICLES[val].fuelType || "petrol";
+  }
+  if(key === 'flCity' || key === 'flFuelType') {
+    if(state.flCity && state.flFuelType !== "electric") {
+      const lastRate = getFuelPrice(state.flCity, state.flFuelType);
+      state.flPriceL = Number.isFinite(lastRate) ? String(lastRate) : "";
+    }
+  }
+
+  if (!skipRender) {
+     renderApp();
+  }
+};
+
+window.updateFuelUI = () => {
+   const l = +state.flLitres, p = +state.flPriceL;
+   const btn = document.getElementById('btn_add_fuel');
+   if(btn) btn.disabled = (!l || !p);
+   const tot = document.getElementById('fl_total_display');
+   if(tot) {
+      if(l && p) {
+         tot.innerHTML = `
+            <div style="background:var(--l3);border-radius:10px;padding:11px 14px;margin-bottom:13px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--bdr2)">
+              <span style="color:var(--muted);font-size:12px">Total Amount</span>
+              <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--amber)">₹${Math.round(l*p).toLocaleString("en-IN")}</span>
+            </div>
+         `;
+      } else {
+         tot.innerHTML = '';
+      }
+   }
+};
+
+window.setTab = (t) => {
+  state.tab = t;
+  renderApp();
+  
+  // LEAFLET MAP FIX: Invalidate size immediately after the tab is visible
+  if (t === 'route' && state.leafReady) {
+    setTimeout(() => {
+      initMap(); 
+      if (mapInstance) mapInstance.invalidateSize(); 
+      if (state.rResult) drawRouteOnMap(state.rResult);
+    }, 150);
+  }
+};
+
+window.calcRoute = async () => {
+  if (!state.rFrom.trim() || !state.rTo.trim()) { updateState('rErr', "Enter both origin and destination."); return; }
+  const autoRate = getFuelPrice(state.rFrom, state.rFuelType);
+  const manualRate = state.rRate === "" ? null : Number(state.rRate);
+  const rate = state.rFuelType === "electric" ? 0 : (manualRate ?? autoRate);
+  if (state.rFuelType !== "electric" && (!Number.isFinite(rate) || rate <= 0)) {
+    updateState('rErr', "Enter a real fuel rate or add a fuel log for this city and fuel type first.");
+    return;
+  }
+  state.rErr = ""; state.rLoading = true; state.rResult = null; resetRouteMap(); renderApp();
+  try {
+    const res = await routeService(state.rFrom, state.rTo, state.vKey, rate, state.rMileage);
+    state.rResult = res;
+    drawRouteOnMap(res);
+  } catch(e) { state.rErr = e.message; }
+  state.rLoading = false;
+  renderApp();
+};
+
+window.saveTrip = () => {
+  if (!state.rResult) return;
+  state.trips.unshift({
+    id: Date.now(), date: new Date().toISOString().slice(0,10),
+    from: state.rResult.from, to: state.rResult.to, km: state.rResult.km,
+    vehicle: VEHICLES[state.vKey]?.label, fuelCost: state.rResult.fuelCost,
+    toll: state.rResult.toll, total: state.rResult.total, mileage: state.rResult.mileage
+  });
+  setTab("dashboard");
+};
+
+window.addFuelEntry = () => {
+  const l = +state.flLitres, p = +state.flPriceL;
+  if (!l || !p) return;
+  state.fuelLog.unshift({id: Date.now(), date: state.flDate, fuelType: state.flFuelType, litres: l, priceL: p, total: Math.round(l*p), city: state.flCity});
+  state.flLitres = "";
+  state.flOk = true;
+  renderApp();
+  setTimeout(() => { state.flOk = false; renderApp(); }, 2000);
+};
+
+window.sendChat = async () => {
+  const t = state.chatIn;
+  if (!t.trim() || state.chatBusy) return;
+  state.msgs.push({role: "user", content: t});
+  state.chatIn = ""; state.chatBusy = true; renderApp();
+  const reply = await chatService([...state.msgs]);
+  state.msgs.push({role: "assistant", content: reply});
+  state.chatBusy = false; renderApp();
+  
+  // Auto-scroll logic inside the chat service 
+  setTimeout(() => { const ce = document.getElementById('chatEndRef'); if (ce) ce.scrollIntoView({behavior: "smooth"}); }, 100);
+};
+
+/* Leaflet Methods */
+function initMap() {
+  if (!window.L || mapInstance || !document.getElementById('map')) return;
+  const L = window.L;
+  mapInstance = L.map('map', {center:[22.5,80.5],zoom:5,zoomControl:false,attributionControl:true});
+  L.control.zoom({position:"bottomright"}).addTo(mapInstance);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{
+    maxZoom:19,
+    attribution:'Tiles &copy; Esri'
+  }).addTo(mapInstance);
+  L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{
+    maxZoom:19,
+    pane:"overlayPane",
+    opacity:0.95,
+    attribution:'Labels &copy; Esri'
+  }).addTo(mapInstance);
+}
+
+function drawRouteOnMap(result) {
+  if (!mapInstance || !window.L) return;
+  const L = window.L;
+  [mapLayers.poly, mapLayers.mA, mapLayers.mB].forEach(l=>{if(l) l.remove();});
+  const pts = result.waypoints.map(p=>[p.lat,p.lng]);
+  mapLayers.poly = L.polyline(pts,{color:"#f59e0b",weight:5,opacity:.92,lineCap:"round",lineJoin:"round"}).addTo(mapInstance);
+  const icon = (em,bg)=>L.divIcon({className:"",html:`<div style="width:36px;height:36px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 0 3px ${bg}44,0 4px 20px #0009;border:2px solid rgba(255,255,255,.15)">${em}</div>`,iconSize:[36,36],iconAnchor:[18,18]});
+  mapLayers.mA = L.marker([result.fromCoords.lat,result.fromCoords.lng],{icon:icon("📍","#10b981")}).bindPopup(`<b style="color:#10b981;font-family:monospace">▲ ${result.from}</b>`).addTo(mapInstance);
+  mapLayers.mB = L.marker([result.toCoords.lat,result.toCoords.lng],{icon:icon("🏁","#f43f5e")}).bindPopup(`<b style="color:#f43f5e;font-family:monospace">■ ${result.to}</b>`).addTo(mapInstance);
+  mapInstance.fitBounds(mapLayers.poly.getBounds(),{padding:[52,52],maxZoom:9});
+}
+
+function resetRouteMap() {
+  [mapLayers.poly, mapLayers.mA, mapLayers.mB].forEach(l=>{if(l) l.remove();});
+  if (mapInstance) mapInstance.setView([22.5,80.5],5);
+}
+
+/* Generators */
+function genVehicleOptions(selectedKey) {
+  const groups = {};
+  Object.entries(VEHICLES).forEach(([k, v]) => {
+    if (!groups[v.group]) groups[v.group] = [];
+    groups[v.group].push({k, v});
+  });
+  return Object.entries(groups).map(([g, items]) => `
+    <optgroup label="— ${g} —">
+      ${items.map(({k, v}) => `<option value="${k}" ${selectedKey===k?'selected':''}>${v.icon} ${v.label}${v.fuelType!=="electric"?` · ${v.mileage}km/L`:""}</option>`).join('')}
+    </optgroup>
+  `).join('');
+}
+
+function genRouteLeft() {
+  let h = `
+    <div class="card">
+      ${CT("⚙️ Trip Configuration")}
+      ${Steps(state.step, ["Locations", "Fuel", "Vehicle"])}
+  `;
+
+  if (state.step === 0) {
+    const fs = locationStatus.rFrom;
+    const ts = locationStatus.rTo;
+    const fromRate = getFuelPrice(state.rFrom, "petrol");
+    const toRate = getFuelPrice(state.rTo, "petrol");
+    h += `
+      <div class="fin">
+        <div class="fld">
+          <label class="lbl">📍 Origin City</label>
+          <input id="inp_rFrom" class="inp" list="lst_rFrom" placeholder="e.g. Delhi, Mumbai, Chandigarh…" value="${escapeHTML(state.rFrom)}"
+            oninput="setLocationField('rFrom', this.value)" />
+          <datalist id="lst_rFrom">
+            ${locationHints.rFrom.map(h=>`<option value="${escapeHTML(h.displayName)}"></option>`).join("")}
+          </datalist>
+          <div id="status_rFrom">
+          ${state.rFrom ? (fs?.located
+            ? `<div style="font-size:10px;color:var(--green);margin-top:4px;font-family:var(--mono)">✓ Located · City: ${escapeHTML(fs.city||"-")} · State: ${escapeHTML(fs.state||"-")} · Country: ${escapeHTML(fs.country||"-")} · ${Number.isFinite(fromRate) ? `Est. petrol ₹${fromRate}/L` : "No petrol rate found"}</div>`
+            : `<div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono)">Searching…</div>`
+          ) : ''}
+          </div>
+        </div>
+        <div class="fld">
+          <label class="lbl">🏁 Destination City</label>
+          <input id="inp_rTo" class="inp" list="lst_rTo" placeholder="e.g. Jaipur, Pune, Hyderabad…" value="${escapeHTML(state.rTo)}"
+            oninput="setLocationField('rTo', this.value)" />
+          <datalist id="lst_rTo">
+            ${locationHints.rTo.map(h=>`<option value="${escapeHTML(h.displayName)}"></option>`).join("")}
+          </datalist>
+          <div id="status_rTo">
+          ${state.rTo ? (ts?.located
+            ? `<div style="font-size:10px;color:var(--green);margin-top:4px;font-family:var(--mono)">✓ Located · City: ${escapeHTML(ts.city||"-")} · State: ${escapeHTML(ts.state||"-")} · Country: ${escapeHTML(ts.country||"-")} · ${Number.isFinite(toRate) ? `Est. petrol ₹${toRate}/L` : "No petrol rate found"}</div>`
+            : `<div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono)">Searching…</div>`
+          ) : ''}
+          </div>
+        </div>
+        ${state.rErr ? `<div style="color:var(--red);font-size:12px;margin-bottom:10px;background:#f43f5e0a;border:1px solid #f43f5e20;border-radius:8px;padding:8px 12px">⚠️ ${state.rErr}</div>` : ''}
+        <button class="btn btn-w" onclick="if(!state.rFrom.trim()||!state.rTo.trim())updateState('rErr','Enter both cities.');else{updateState('rErr','');updateState('step',1);}">
+          Next: Fuel Settings →
+        </button>
+      </div>
+    `;
+  }
+  
+  if (state.step === 1) {
+    const autoRate = getFuelPrice(state.rFrom, state.rFuelType);
+    h += `
+      <div class="fin">
+        <div class="fld">
+          <label class="lbl">⛽ Fuel Type</label>
+          <select id="sel_rFuelType" class="inp" onchange="updateState('rFuelType', this.value)">
+            ${["petrol","diesel","cng","electric"].map(f=>`<option value="${f}" ${state.rFuelType===f?'selected':''}>${f.toUpperCase()}</option>`).join('')}
+          </select>
+        </div>
+        ${state.rFuelType!=="electric"?`
+          <div class="fld">
+            <label class="lbl">💰 Fuel Rate (₹/L) — manual or from your logs</label>
+            <input id="inp_rRate" class="inp inp-m" type="number" placeholder="${Number.isFinite(autoRate) ? `${autoRate} (current est.)` : "Enter real current rate"}" value="${escapeHTML(state.rRate)}" oninput="state.rRate = this.value"/>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:5px">
+              <span>${state.rFrom ? `Current est. rate in ${state.rFrom}` : "Enter origin to reuse saved rates"}</span>
+              <b style="color:var(--amber);font-family:var(--mono)">${Number.isFinite(autoRate) ? `₹${autoRate}/L` : "Not available"}</b>
+            </div>
+          </div>
+        `:`
+          <div style="background:#22d3ee0a;border:1px solid #22d3ee1a;border-radius:8px;padding:10px 13px;font-size:12px;color:var(--cyan);margin-bottom:13px">
+            ⚡ EV cost calculated at ~₹1.1/km average charging rate
+          </div>
+        `}
+        <div style="display:flex;gap:9px">
+          <button class="btn-o" style="flex:1" onclick="updateState('step',0)">← Back</button>
+          <button class="btn" style="flex:2" onclick="updateState('step',2)">Next: Vehicle →</button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (state.step === 2) {
+    h += `
+      <div class="fin">
+        <div class="fld">
+          <label class="lbl">🚗 Vehicle Type</label>
+          <select id="sel_vKey" class="inp" onchange="updateState('vKey', this.value)">
+            ${genVehicleOptions(state.vKey)}
+          </select>
+        </div>
+        ${VEHICLES[state.vKey]?.fuelType!=="electric"?`
+          <div class="fld">
+            <label class="lbl">⚡ Your Actual Mileage (km/L)</label>
+            <input id="inp_rMileage" class="inp inp-m" type="number" min="1" max="100" value="${state.rMileage}" oninput="state.rMileage = +this.value||state.rMileage" style="color:var(--green)"/>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">Manufacturer spec: ${VEHICLES[state.vKey]?.mileage} km/L</div>
+          </div>
+        `:''}
+        ${state.rErr ? `<div style="color:var(--red);font-size:12px;margin-bottom:10px;background:#f43f5e0a;border:1px solid #f43f5e20;border-radius:8px;padding:8px 12px">⚠️ ${state.rErr}</div>` : ''}
+        <div style="display:flex;gap:9px">
+          <button class="btn-o" style="flex:1" onclick="updateState('step',1)">← Back</button>
+          <button class="btn" style="flex:2" onclick="calcRoute()" ${state.rLoading?'disabled':''}>
+            ${state.rLoading?`<span class="spin">↻</span> Calculating…`:`🔍 Calculate Route`}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+  h += `</div>`;
+
+  if (state.rResult) {
+    const res = state.rResult;
+    h += `
+      <div class="card card-a glow fin">
+        ${CT("📊 Route Analysis", "amber")}
+        <div class="g2" style="margin-bottom:13px">
+          ${[
+            {ic:"📍",v:`${res.km} km`,l:"Distance",c:"var(--blue)"},
+            {ic:"⏱️",v:res.duration,l:"Duration",c:"var(--violet)"},
+            {ic:"💰",v:`₹${res.fuelCost.toLocaleString("en-IN")}`,l:res.fuelType==="electric"?"Elec. Cost":"Fuel Cost",c:"var(--green)"},
+            {ic:"🛣️",v:`₹${res.toll.toLocaleString("en-IN")}`,l:getKnownToll(res.from, res.to) !== null ? "Toll (Exact)" : "Toll (Est.)",c:"var(--red)"}
+          ].map(m=>`
+            <div class="ram">
+              <span style="font-size:18px;margin-bottom:3px">${m.ic}</span>
+              <div class="ram-v" style="color:${m.c}">${m.v}</div>
+              <div class="ram-l">${m.l}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="font-size:10px;color:var(--muted);text-align:center;margin-bottom:13px;line-height:1.4">
+          Distance & Time via real road routing. ${getKnownToll(res.from, res.to) !== null ? "<span style='color:var(--green)'>Using actual NHAI toll prices for this route.</span>" : "Tolls are mathematically estimated.<br/>(Assumes ~75% highway usage. Real tolls may vary.)"}
+        </div>
+        <div style="background:var(--ag);border:1px solid #f59e0b28;border-radius:10px;padding:11px 15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:13px">
+          <span style="font-size:12px;color:var(--muted)">💵 Total Trip Cost</span>
+          <span style="font-family:var(--mono);font-size:21px;font-weight:700;color:var(--amber)">₹${res.total.toLocaleString("en-IN")}</span>
+        </div>
+        ${res.fuelType!=="electric" ? SR("Fuel Used", `${res.fuelUsed} L`, "var(--muted)") : ''}
+        ${SR("Fuel Rate", res.fuelType==="electric"?"~₹1.1/km":`₹${res.rate}/L`, "var(--muted)")}
+        ${SR("Cost per km", `₹${res.cpkm}`, "var(--teal)")}
+        
+        <div style="background:var(--bg);border-radius:10px;padding:13px;border:1px solid var(--bdr);margin-top:13px;margin-bottom:13px">
+          <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:1.1px;margin-bottom:11px;text-transform:uppercase">⚖️ Route Comparison</div>
+          ${[{lb:"🛣️ Expressway (with toll)",v:res.total,c:"var(--amber)"}, {lb:"🌿 State Highway (no toll)",v:res.tollFreeTotal,c:"var(--blue)"}].map((row,i)=>{
+            const mx = Math.max(res.total, res.tollFreeTotal);
+            return `
+              <div style="${i===0?'margin-bottom:11px':''}">
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px">
+                  <span style="color:var(--muted)">${row.lb}</span>
+                  <b style="font-family:var(--mono);color:${row.c}">₹${row.v.toLocaleString("en-IN")}</b>
+                </div>
+                <div style="background:var(--faint);border-radius:99px;height:6px;overflow:hidden">
+                  <div style="width:${Math.round((row.v/mx)*100)}%;height:100%;border-radius:99px;background:${row.c};opacity:.8;transition:width .6s ease"></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+          <div style="margin-top:9px;font-size:12px;padding:7px 10px;border-radius:8px;
+            color:${res.saving>0?"var(--green)":"var(--amber)"};
+            background:${res.saving>0?"#10b98108":"#f59e0b08"};
+            border:1px solid ${res.saving>0?"#10b98118":"#f59e0b18"}">
+            ${res.saving>0 ? `💡 Avoid toll to save ₹${Math.abs(res.saving).toLocaleString("en-IN")} (route ~7% longer)` : `✅ Expressway saves ₹${Math.abs(res.saving).toLocaleString("en-IN")} vs state roads`}
+          </div>
+        </div>
+
+        <div style="margin-bottom:13px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:11px;color:var(--muted)">Efficiency Rating</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-family:var(--mono);font-size:18px;font-weight:700;color:${res.eff.color}">${res.eff.grade}</span>
+              <span class="tag" style="background:${res.eff.color}12;color:${res.eff.color};border:1px solid ${res.eff.color}22">${res.eff.label}</span>
+            </div>
+          </div>
+          ${Pbar(res.eff.pct, "linear-gradient(90deg,#f43f5e,#f59e0b,#10b981)")}
+        </div>
+
+        <div style="display:flex;gap:9px">
+          <button class="btn" style="flex:3" onclick="saveTrip()">💾 Save Trip</button>
+          <button class="btn-o" style="flex:2" onclick="updateState('step',0);updateState('rResult',null);resetRouteMap();updateState('rErr','')">↺ New Route</button>
+        </div>
+      </div>
+    `;
+  }
+  return h;
+}
+
+function genFuelLogs() {
+  const stats = getStats();
+  const knownCities = getKnownCities();
+  const latestRates = state.fuelLog
+    .filter(e => e.fuelType !== "electric" && Number(e.priceL) > 0)
+    .reduce((acc, e) => {
+      const key = `${normalizeCityKey(e.city)}|${e.fuelType}`;
+      if (!acc[key]) acc[key] = e;
+      return acc;
+    }, {});
+  const latestRateList = Object.values(latestRates).slice(0, 12);
+  return `
+    <div class="fin">
+      ${SH("Fuel Logs", "Track every fill-up with your real data and reuse your own latest rates")}
+      <div class="g2" style="margin-bottom:18px">
+        <div class="card">
+          ${CT("➕ Add Fuel Entry", "green")}
+          <div class="fld"><label class="lbl">📅 Date</label><input id="inp_flDate" class="inp" type="date" value="${state.flDate}" onchange="updateState('flDate', this.value)"/></div>
+          <div class="g2">
+            <div class="fld">
+              <label class="lbl">🏙️ City</label>
+              <input id="inp_flCity" class="inp" list="cl" placeholder="Delhi…" value="${escapeHTML(state.flCity)}" oninput="state.flCity = this.value" onchange="updateState('flCity', this.value)"/>
+              <datalist id="cl">${knownCities.map(c=>`<option value="${escapeHTML(c)}"></option>`).join('')}</datalist>
+            </div>
+            <div class="fld">
+              <label class="lbl">⛽ Fuel Type</label>
+              <select id="sel_flFuelType" class="inp" onchange="updateState('flFuelType', this.value)">
+                ${["petrol","diesel","cng","electric"].map(f=>`<option value="${f}" ${state.flFuelType===f?'selected':''}>${f.toUpperCase()}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          ${state.flCity&&state.flFuelType!=="electric"?`
+            <div style="background:var(--ag);border:1px solid #f59e0b20;border-radius:8px;padding:7px 12px;margin-bottom:12px;display:flex;justify-content:space-between;font-size:12px">
+              <span style="color:var(--muted)">Current rate — ${escapeHTML(state.flCity)}</span>
+              <b style="font-family:var(--mono);color:var(--amber)">${Number.isFinite(getFuelPrice(state.flCity,state.flFuelType)) ? `₹${getFuelPrice(state.flCity,state.flFuelType)}/L` : "Not available"}</b>
+            </div>
+          `:''}
+          <div class="g2">
+            <div class="fld"><label class="lbl">💧 Litres</label><input id="inp_flLitres" class="inp inp-m" type="number" placeholder="e.g. 35" value="${state.flLitres}" oninput="state.flLitres = this.value; updateFuelUI()"/></div>
+            <div class="fld"><label class="lbl">💰 ₹ per Litre</label><input id="inp_flPriceL" class="inp inp-m" type="number" placeholder="₹/L" value="${state.flPriceL}" oninput="state.flPriceL = this.value; updateFuelUI()"/></div>
+          </div>
+          <div id="fl_total_display">
+          ${state.flLitres&&state.flPriceL?`
+            <div style="background:var(--l3);border-radius:10px;padding:11px 14px;margin-bottom:13px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--bdr2)">
+              <span style="color:var(--muted);font-size:12px">Total Amount</span>
+              <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--amber)">₹${Math.round(+state.flLitres*(+state.flPriceL)).toLocaleString("en-IN")}</span>
+            </div>
+          `:''}
+          </div>
+          <button id="btn_add_fuel" class="btn btn-w" ${(!state.flLitres||!state.flPriceL)?'disabled':''} onclick="addFuelEntry()" style="${state.flOk?'background:linear-gradient(135deg,#10b981,#059669)':''}">
+            ${state.flOk?"✅ Entry Saved!":"➕ Add Entry"}
+          </button>
+        </div>
+        
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            ${CT("📊 Fuel Summary", "teal")}
+            ${SR("Total Entries", state.fuelLog.length, "var(--blue)")}
+            ${SR("Total Litres", `${stats.flL.toFixed(1)} L`, "var(--muted)")}
+            ${SR("Total Spend", stats.fls?`₹${stats.fls.toLocaleString("en-IN")}`:"₹0", "var(--amber)")}
+            ${SR("Avg Price / Litre", stats.avgP?`₹${stats.avgP.toFixed(2)}/L`:"—", "var(--green)")}
+          </div>
+          <div class="card">
+            ${CT("🏙️ Latest Rates From Your Logs", "blue")}
+            ${latestRateList.length ? `
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+                ${latestRateList.map(e=>`
+                  <div style="display:flex;justify-content:space-between;padding:6px 0 6px 0;border-bottom:1px solid var(--faint);padding-right:6px">
+                    <span style="font-size:12px">${escapeHTML(toTitleCase(normalizeCityKey(e.city)))} · ${e.fuelType.toUpperCase()}</span>
+                    <span style="font-family:var(--mono);font-size:12px;color:var(--amber)">₹${e.priceL}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : `
+              <div class="empty" style="padding:18px">
+                <div style="font-size:12px;color:var(--muted)">No saved rates yet. Add your first real fuel entry.</div>
+              </div>
+            `}
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        ${CT("📋 Fuel Entry Log", "blue")}
+        ${state.fuelLog.length===0?`
+          <div class="empty">
+            <div style="font-size:38px;opacity:.12">⛽</div>
+            <div style="font-size:13px;color:var(--muted)">No entries yet. Add your first fuel log above.</div>
+          </div>
+        `:`
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead><tr>${["Date","City","Type","Litres","₹/L","Total"].map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+              <tbody>
+                ${state.fuelLog.map(e=>`
+                  <tr>
+                    <td style="font-family:var(--mono);color:var(--muted);font-size:11px">${e.date}</td>
+                    <td style="font-weight:500">${escapeHTML(e.city)}</td>
+                    <td><span class="tag ${e.fuelType==="petrol"?"tg-a":e.fuelType==="diesel"?"tg-b":e.fuelType==="cng"?"tg-t":"tg-c"}">${e.fuelType.toUpperCase()}</span></td>
+                    <td style="font-family:var(--mono)">${e.litres} L</td>
+                    <td style="font-family:var(--mono);color:var(--muted)">₹${e.priceL}</td>
+                    <td style="font-family:var(--mono);color:var(--amber);font-weight:700">₹${e.total.toLocaleString("en-IN")}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function genDashboard() {
+  const stats = getStats();
+  return `
+    <div class="fin">
+      ${SH("Dashboard", "Your complete fuel, toll & distance overview — starts at zero")}
+      <div class="g4" style="margin-bottom:18px">
+        ${[
+          {ic:"💰",lb:"Total Spend",  v:stats.total?`₹${stats.total.toLocaleString("en-IN")}`:"₹0", c:"var(--amber)"},
+          {ic:"⛽",lb:"Fuel Cost",    v:(stats.tf+stats.fls)?`₹${(stats.tf+stats.fls).toLocaleString("en-IN")}`:"₹0", c:"var(--green)"},
+          {ic:"🛣️",lb:"Total Toll",   v:stats.tt?`₹${stats.tt.toLocaleString("en-IN")}`:"₹0", c:"var(--red)"},
+          {ic:"📍",lb:"Distance",     v:stats.td?`${Math.round(stats.td).toLocaleString("en-IN")} km`:"0 km", c:"var(--blue)"}
+        ].map(c=>`
+          <div class="card kpi">
+            <div class="kpi-ghost">${c.ic}</div>
+            <div style="font-size:20px">${c.ic}</div>
+            <div class="kpi-val" style="color:${c.c}">${c.v}</div>
+            <div class="kpi-lbl">${c.lb}</div>
+          </div>
+        `).join('')}
+      </div>
+      
+      <div class="g2" style="margin-bottom:18px">
+        <div class="card">
+          ${CT("🚗 Active Vehicle")}
+          <div class="fld"><label class="lbl">Vehicle</label>
+            <select class="inp" onchange="updateState('vKey', this.value)">
+              ${genVehicleOptions(state.vKey)}
+            </select>
+          </div>
+          ${SR("Fuel Type", VEHICLES[state.vKey]?.fuelType?.toUpperCase(), "var(--amber)")}
+          ${VEHICLES[state.vKey]?.fuelType!=="electric"?SR("Std Mileage", `${VEHICLES[state.vKey]?.mileage} km/L`, "var(--green)"):''}
+          ${SR("Toll Class", `×${VEHICLES[state.vKey]?.tollM}`, "var(--muted)")}
+          ${SR("Trips Saved", state.trips.length, "var(--blue)")}
+          ${SR("Fuel Logs", state.fuelLog.length, "var(--teal)")}
+        </div>
+        <div class="card">
+          ${CT("⚡ Quick Actions", "teal")}
+          ${[["🗺️ Plan a New Route","route"],["⛽ Log Fuel Purchase","fuellogs"],["📈 View Analytics","analytics"],["🤖 Ask AI","ai"]].map(([lb,t])=>`
+            <button class="btn-g" onclick="setTab('${t}')" style="justify-content:flex-start;padding:10px 14px;width:100%;margin-bottom:8px;font-size:13px">${lb}</button>
+          `).join('')}
+        </div>
+      </div>
+      
+      <div class="card">
+        ${CT("📋 Trip History", "blue")}
+        ${state.trips.length===0?`
+          <div class="empty">
+            <div style="font-size:38px;opacity:.12">🗺️</div>
+            <div style="font-size:13px;color:var(--muted)">No trips yet. Plan your first route!</div>
+            <button class="btn" onclick="setTab('route')" style="margin-top:8px;font-size:12px">Plan Route →</button>
+          </div>
+        `:`
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead><tr>${["Date","Route","Vehicle","Distance","Fuel","Toll","Total"].map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+              <tbody>
+                ${state.trips.map(t=>`
+                  <tr>
+                    <td style="font-family:var(--mono);color:var(--muted);font-size:11px">${t.date}</td>
+                    <td style="font-weight:600">${escapeHTML(t.from)} → ${escapeHTML(t.to)}</td>
+                    <td style="color:var(--muted);font-size:11px">${t.vehicle}</td>
+                    <td style="font-family:var(--mono)">${t.km} km</td>
+                    <td style="font-family:var(--mono);color:var(--green)">₹${t.fuelCost.toLocaleString("en-IN")}</td>
+                    <td style="font-family:var(--mono);color:var(--red)">₹${t.toll.toLocaleString("en-IN")}</td>
+                    <td style="font-family:var(--mono);color:var(--amber);font-weight:700">₹${t.total.toLocaleString("en-IN")}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function genAnalytics() {
+  const stats = getStats();
+  const monthly = getMonthly();
+  
+  if (state.trips.length===0 && state.fuelLog.length===0) {
+    return `
+      <div class="fin">
+        ${SH("Analytics", "Spending trends, breakdowns & smart savings insights")}
+        <div class="card"><div class="empty">
+          <div style="font-size:40px;opacity:.1">📈</div>
+          <div style="font-size:13px;color:var(--muted)">No data yet — plan trips or log fuel to see analytics.</div>
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <button class="btn" onclick="setTab('route')" style="font-size:12px">Plan Route</button>
+            <button class="btn-o" onclick="setTab('fuellogs')" style="font-size:12px">Log Fuel</button>
+          </div>
+        </div></div>
+      </div>
+    `;
+  }
+  
+  return `
+    <div class="fin">
+      ${SH("Analytics", "Spending trends, breakdowns & smart savings insights")}
+      <div class="g3" style="margin-bottom:16px">
+        ${[
+          ["Avg Monthly", monthly.length?`₹${Math.round((monthly.reduce((s,m)=>s+m.fuel+m.toll,0))/monthly.length).toLocaleString("en-IN")}`:"—","var(--amber)"],
+          ["Cost per km", stats.td?`₹${(stats.total/stats.td).toFixed(2)}`:"—","var(--teal)"],
+          ["Fuel vs Total", stats.total?`${Math.round(((stats.tf+stats.fls)/stats.total)*100)}% fuel`:"—","var(--violet)"]
+        ].map(([l,v,c])=>`
+          <div class="card" style="text-align:center">
+            <div style="font-family:var(--mono);font-size:24px;font-weight:700;color:${c}">${v}</div>
+            <div style="color:var(--muted);font-size:11px;margin-top:5px">${l}</div>
+          </div>
+        `).join('')}
+      </div>
+      
+      <div class="g2" style="margin-bottom:16px">
+        <div class="card">
+          ${CT("📈 Monthly Spend Trend", "amber")}
+          ${monthly.length>0?`<div style="height:200px;position:relative"><canvas id="chartArea"></canvas></div>`:`<div class="empty"><div style="opacity:.12;font-size:26px">📈</div><div style="font-size:12px;color:var(--muted)">Save more trips to see trend</div></div>`}
+        </div>
+        <div class="card">
+          ${CT("🥧 Expense Split", "teal")}
+          ${stats.total>0?`
+            <div style="height:150px;position:relative"><canvas id="chartPie"></canvas></div>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px">
+              ${[["Trip Fuel",stats.tf,PC[0]],["Toll",stats.tt,PC[1]],["Fuel Log",stats.fls,PC[2]]].filter(d=>d[1]>0).map(([n,v,c])=>`
+                <div style="text-align:center">
+                  <div style="color:${c};font-size:10px;display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:${c};display:inline-block"></span>${n}</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:13px;margin-top:2px">₹${Math.round(v).toLocaleString("en-IN")}</div>
+                </div>
+              `).join('')}
+            </div>
+          `:`<div class="empty"><div style="opacity:.12;font-size:26px">🥧</div><div style="font-size:12px;color:var(--muted)">No spend data yet</div></div>`}
+        </div>
+      </div>
+      
+      ${monthly.length>0?`
+        <div class="card" style="margin-bottom:16px">
+          ${CT("📊 Monthly Bar Chart", "blue")}
+          <div style="height:210px;position:relative"><canvas id="chartBar"></canvas></div>
+        </div>
+      `:''}
+      
+      <div class="card" style="border-color:#f59e0b22">
+        ${CT("💡 Smart Insights", "amber")}
+        <div style="display:flex;flex-direction:column;gap:9px">
+          ${[
+            stats.td>0?`You've driven ${Math.round(stats.td).toLocaleString("en-IN")} km across ${state.trips.length} trip${state.trips.length!==1?"s":""} — avg ₹${state.trips.length?Math.round(stats.total/state.trips.length).toLocaleString("en-IN"):"0"} per trip.`:null,
+            stats.tt&&stats.total?`Tolls are ${Math.round((stats.tt/stats.total)*100)}% of your total — consider state highways for hops under 100 km.`:null,
+            stats.flL>0?`You've filled ${stats.flL.toFixed(0)}L at avg ₹${stats.avgP.toFixed(2)}/L. Keep comparing your own city-wise logs to spot cheaper refill locations.`:null,
+            `Keep FASTag wallet ≥ ₹200 — below ₹100 is flagged and can trigger 2× penalty at some plazas.`,
+            `At 60–80 km/h your ${VEHICLES[state.vKey]?.label} uses ~15% less fuel than at 100 km/h — ideal highway cruise speed.`,
+          ].filter(Boolean).map(tip=>`
+            <div style="display:flex;gap:11px;padding:10px 13px;background:var(--bg);border-radius:10px;border:1px solid var(--bdr);font-size:12px;line-height:1.7">
+              <span style="color:var(--amber);flex-shrink:0">💡</span><span style="color:var(--muted)">${tip}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function genAiChat() {
+  const stats = getStats();
+  return `
+    <div class="fin chat-g" style="display:grid;grid-template-columns:1fr 265px;gap:18px">
+      <div class="card" style="display:flex;flex-direction:column;height:76vh;padding:0;overflow:hidden">
+        <div style="padding:13px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:11px">
+          <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--amber),#ea580c);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🤖</div>
+          <div>
+            <div style="font-weight:700;font-size:14px">FuelTrack AI</div>
+            <div style="font-size:10px;color:var(--green);font-family:var(--mono)">● India Fuel & Road Expert</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:7px">
+            <span class="tag tg-a">AI Powered</span>
+            <span class="tag tg-t">${state.msgs.length-1} msg${state.msgs.length!==2?"s":""}</span>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px">
+          ${state.msgs.map(m=>`<div class="${m.role==="user"?"bu fin":"ba fin"}">${escapeHTML(m.content)}</div>`).join('')}
+          ${state.chatBusy?`<div class="ba pul" style="color:var(--muted)">Thinking…</div>`:''}
+          <div id="chatEndRef"></div>
+        </div>
+        <div style="padding:11px 13px;border-top:1px solid var(--bdr);display:flex;gap:9px">
+          <input id="inp_chat" class="inp" style="flex:1;font-size:13px" placeholder="Ask about fuel prices, tolls, mileage, EV, routes…"
+            value="${escapeHTML(state.chatIn)}" oninput="state.chatIn = this.value; document.getElementById('btn_chat').disabled = !this.value.trim()"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!${state.chatBusy}&&state.chatIn.trim()){sendChat();}"/>
+          <button id="btn_chat" class="btn" onclick="sendChat()" ${state.chatBusy||!state.chatIn.trim()?'disabled':''} style="padding:10px 18px">
+            ${state.chatBusy?"…":"Send →"}
+          </button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:13px">
+        <div class="card">
+          ${CT("⚡ Quick Queries", "amber")}
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${["How to improve mileage?","Cheapest petrol city India?","NH48 Delhi–Mumbai toll cost?","CNG vs Petrol per km savings?","EV vs petrol car economics?","FASTag rules & penalties?","Best highway driving speed?"].map(q=>`
+              <button class="btn-g" onclick="updateState('chatIn','${q}');sendChat();" style="font-size:11px;line-height:1.5;padding:7px 11px;text-align:left;white-space:normal">${q}</button>
+            `).join('')}
+          </div>
+        </div>
+        <div class="card">
+          ${CT("📡 Session Stats", "blue")}
+          ${SR("Trips", state.trips.length, "var(--blue)")}
+          ${SR("Fuel Entries", state.fuelLog.length, "var(--green)")}
+          ${SR("Total Km", `${Math.round(stats.td)} km`, "var(--amber)")}
+          ${SR("Total Spent", stats.total?`₹${stats.total.toLocaleString("en-IN")}`:"₹0", "var(--amber)")}
+          ${SR("Vehicle", VEHICLES[state.vKey]?.label, "var(--muted)")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderHeader() {
+  const stats = getStats();
+  document.getElementById('hdr_trips_count').innerText = `${state.trips.length} trips ·`;
+  document.getElementById('hdr_total_spend').innerText = `₹${stats.total.toLocaleString("en-IN")}`;
+  document.getElementById('hdr_vkey').innerHTML = `${VEHICLES[state.vKey]?.icon} ${VEHICLES[state.vKey]?.label}`;
+  
+  const mapDot = document.getElementById('hdr_map_dot');
+  const mapTxt = document.getElementById('hdr_map_txt');
+  if(mapDot) mapDot.style.background = state.leafReady ? "var(--teal)" : "var(--red)";
+  if(mapTxt) { mapTxt.style.color = state.leafReady ? "var(--teal)" : "var(--red)"; mapTxt.innerText = state.leafReady ? "Map Live" : "Loading"; }
+
+  const navHtml = [
+    ["route","🗺️","Route Planner",0],
+    ["fuellogs","⛽","Fuel Logs",state.fuelLog.length],
+    ["dashboard","📊","Dashboard",0],
+    ["analytics","📈","Analytics",0],
+    ["ai","🤖","AI Chat",0],
+  ].map(([id,ic,lb,ct])=>`
+    <button class="ntab${state.tab===id?' on':''}" onclick="setTab('${id}')">
+      <span>${ic}</span><span>${lb}</span>
+      ${ct>0?`<span class="nbadge">${ct}</span>`:''}
+    </button>
+  `).join('');
+  document.getElementById('main_nav').innerHTML = navHtml;
+}
+
+function renderMapOverlays() {
+  const overlayContainer = document.getElementById('map_overlays');
+  const emptyContainer = document.getElementById('map_empty');
+  if(!overlayContainer || !emptyContainer) return;
+
+  if (state.rResult) {
+    emptyContainer.innerHTML = '';
+    overlayContainer.innerHTML = `
+      <div class="moverlay" style="top:12px;left:12px;display:flex;flex-direction:column;gap:7px">
+        <div class="mchip">
+          <span style="color:var(--green)">📍</span>
+          <span style="color:var(--txt);font-weight:600">${escapeHTML(state.rResult.fromMeta?.city || state.rResult.from)}</span>
+          <span style="color:var(--dim)">·</span>
+          <span style="color:var(--muted)">${escapeHTML(state.rResult.fromMeta?.state || "-")}</span>
+          <span style="color:var(--dim)">·</span>
+          <span style="color:var(--muted)">${escapeHTML(state.rResult.fromMeta?.country || "India")}</span>
+        </div>
+        <div class="mchip">
+          <span style="color:var(--red)">🏁</span>
+          <span style="color:var(--txt);font-weight:600">${escapeHTML(state.rResult.toMeta?.city || state.rResult.to)}</span>
+          <span style="color:var(--dim)">·</span>
+          <span style="color:var(--muted)">${escapeHTML(state.rResult.toMeta?.state || "-")}</span>
+          <span style="color:var(--dim)">·</span>
+          <span style="color:var(--muted)">${escapeHTML(state.rResult.toMeta?.country || "India")}</span>
+        </div>
+      </div>
+      <div class="moverlay" style="top:12px;right:12px;display:flex;flex-direction:column;align-items:flex-end;gap:7px">
+        <div class="mchip">
+          <span style="color:var(--amber);font-weight:700">${state.rResult.km} km</span>
+          <span style="color:var(--dim)">·</span>
+          <span style="color:var(--violet)">${state.rResult.duration}</span>
+        </div>
+        <div class="mchip">
+          <span style="color:var(--green)">₹${state.rResult.fuelCost.toLocaleString("en-IN")}</span>
+          <span style="color:var(--dim)">fuel +</span>
+          <span style="color:var(--red)">₹${state.rResult.toll.toLocaleString("en-IN")}</span>
+          <span style="color:var(--dim)">toll</span>
+        </div>
+      </div>
+      <div class="moverlay" style="bottom:12px;left:12px">
+        <div class="mchip" style="gap:10px">
+          <span style="display:inline-flex;align-items:center;gap:5px">
+            <span style="display:inline-block;width:18px;height:3px;border-radius:2px;background:var(--amber)"></span>
+            <span style="color:var(--muted);font-size:10px">Toll Route</span>
+          </span>
+          <span class="tag tg-a">Live</span>
+        </div>
+      </div>
+    `;
+  } else {
+    overlayContainer.innerHTML = '';
+    emptyContainer.innerHTML = `
+      <div style="font-size:56px;opacity:.1">🗺️</div>
+      <div style="font-size:13px;color:var(--muted);text-align:center">
+        ${state.rLoading ? `<span class="spin">↻</span> Plotting route on map…` : `Configure your trip to see the live route`}
+      </div>
+    `;
+  }
+}
+
+function toWaypoints(coords) {
+  if (!Array.isArray(coords)) return null;
+  const pts = coords.map(([lng,lat])=>({lat,lng})).filter(p=>isValidCoord(p.lat, p.lng));
+  return pts.length > 1 ? pts : null;
+}
+
+function renderCharts() {
+  if (state.tab !== 'analytics') return;
+  setTimeout(() => {
+    const data = getMonthly();
+    const stats = getStats();
+    
+    // Area Chart (Recharts clone)
+    const ctxA = document.getElementById('chartArea');
+    if (ctxA) {
+      if(areaChartInst) areaChartInst.destroy();
+      areaChartInst = new Chart(ctxA, {
+        type: 'line',
+        data: {
+          labels: data.map(d=>d.month),
+          datasets: [
+            {label:'Fuel', data:data.map(d=>d.fuel), borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.2)', fill:true, tension:0.4, pointRadius:3, borderWidth:2.5},
+            {label:'Toll', data:data.map(d=>d.toll), borderColor:'#f43f5e', backgroundColor:'rgba(244,63,94,0.2)', fill:true, tension:0.4, pointRadius:3, borderWidth:2}
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: { x: { grid: {display:false}, ticks: {color:'var(--muted)'} }, y: { grid: {color:'var(--faint)'}, ticks: {color:'var(--muted)'} } },
+          plugins: { legend: {display:false}, tooltip: {mode: 'index', intersect: false} }
+        }
+      });
+    }
+
+    // Pie Chart
+    const ctxP = document.getElementById('chartPie');
+    if (ctxP) {
+      if(pieChartInst) pieChartInst.destroy();
+      const pData = [{name:"Trip Fuel",value:stats.tf},{name:"Toll",value:stats.tt},{name:"Fuel Log",value:stats.fls}].filter(d=>d.value>0);
+      pieChartInst = new Chart(ctxP, {
+        type: 'doughnut',
+        data: {
+          labels: pData.map(d=>d.name),
+          datasets: [{ data: pData.map(d=>d.value), backgroundColor: PC, borderWidth: 0 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '70%',
+          plugins: { legend: {display:false}, tooltip:{callbacks:{label: c => `₹${Math.round(c.raw).toLocaleString("en-IN")}`}} }
+        }
+      });
+    }
+
+    // Bar Chart
+    const ctxB = document.getElementById('chartBar');
+    if (ctxB) {
+      if(barChartInst) barChartInst.destroy();
+      barChartInst = new Chart(ctxB, {
+        type: 'bar',
+        data: {
+          labels: data.map(d=>d.month),
+          datasets: [
+            {label:'Fuel', data:data.map(d=>d.fuel), backgroundColor:'#f59e0b', borderRadius:{topLeft:5,topRight:5}},
+            {label:'Toll', data:data.map(d=>d.toll), backgroundColor:'#f43f5e', borderRadius:{topLeft:5,topRight:5}}
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: { x: { grid: {display:false}, ticks: {color:'var(--muted)'} }, y: { grid: {color:'var(--faint)'}, ticks: {color:'var(--muted)'} } },
+          plugins: { legend: {display:false}, tooltip: {mode: 'index', intersect: false} }
+        }
+      });
+    }
+  }, 50);
+}
+
+function renderApp() {
+  renderHeader();
+  document.getElementById('tab_route').style.display = state.tab === 'route' ? 'block' : 'none';
+  document.getElementById('tab_fuellogs').style.display = state.tab === 'fuellogs' ? 'block' : 'none';
+  document.getElementById('tab_dashboard').style.display = state.tab === 'dashboard' ? 'block' : 'none';
+  document.getElementById('tab_analytics').style.display = state.tab === 'analytics' ? 'block' : 'none';
+  document.getElementById('tab_ai').style.display = state.tab === 'ai' ? 'block' : 'none';
+
+  if(state.tab === 'route') { document.getElementById('route_left_pane').innerHTML = genRouteLeft(); renderMapOverlays(); }
+  if(state.tab === 'fuellogs') document.getElementById('tab_fuellogs').innerHTML = genFuelLogs();
+  if(state.tab === 'dashboard') document.getElementById('tab_dashboard').innerHTML = genDashboard();
+  if(state.tab === 'analytics') { document.getElementById('tab_analytics').innerHTML = genAnalytics(); renderCharts(); }
+  if(state.tab === 'ai') { 
+    document.getElementById('tab_ai').innerHTML = genAiChat(); 
+  }
+}
+
+// Init
+window.onload = () => {
+  state.leafReady = !!window.L;
+  renderApp();
+  if(state.leafReady && state.tab === 'route') setTimeout(initMap, 80);
+};
+</script>
+</body>
+</html>
