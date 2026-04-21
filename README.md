@@ -19,7 +19,7 @@
     <circle cx="30" cy="70" r="3" fill="#f59e0b"/>
     <circle cx="53" cy="70" r="3" fill="#f59e0b"/>
     <text x="108" y="47" fill="#f59e0b" font-size="30" font-weight="700" font-family="'JetBrains Mono', 'DM Sans', sans-serif" letter-spacing="1.2">FUELTRACK</text>
-    <text x="109" y="66" fill="#64748b" font-size="11" font-family="'DM Sans', sans-serif" letter-spacing="2.5">INDIA ROUTE OPTIMIZER</text>
+    <text x="108" y="66" fill="#334155" font-size="11" font-family="'DM Sans', sans-serif" letter-spacing="2.5">INDIA ROUTE OPTIMIZER</text>
   </svg>
 </p>
 
