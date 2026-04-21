@@ -20,6 +20,7 @@
       --bdr:#1d2d45;--bdr2:#263a58;
       --amber:#f59e0b;--amberL:#fcd34d;--amberD:#d97706;
       --ag:rgba(245,158,11,.1);
+      --logo-bg:#0b1526;--logo-border:#f59e0b40;--logo-shadow:#f59e0b28;
       --teal:#14b8a6;--green:#10b981;--red:#f43f5e;--blue:#3b82f6;
       --violet:#7c3aed;--cyan:#22d3ee;
       --txt:#e2e8f7;--muted:#526a8a;--dim:#2a3c58;--faint:#162035;
@@ -34,7 +35,7 @@
     .hdr{background:rgba(6,11,20,.94);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:400;backdrop-filter:blur(18px)}
     .hdr-inner{max-width:1380px;margin:0 auto;padding:0 22px;height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .logo{display:flex;align-items:center;gap:10px}
-    .logo-gem{width:40px;height:40px;background:#0b1526;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:1px solid #f59e0b40;box-shadow:0 0 20px #f59e0b28}
+    .logo-gem{width:40px;height:40px;background:var(--logo-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:1px solid var(--logo-border);box-shadow:0 0 20px var(--logo-shadow)}
     .logo-gem svg{width:78%;height:78%;display:block}
     .logo-name{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:1.5px;color:var(--amber)}
     .logo-sub{font-size:7.5px;letter-spacing:3px;color:var(--muted);margin-top:-1px;text-transform:uppercase}
@@ -161,6 +162,7 @@
       <div class="logo">
         <div class="logo-gem">
           <svg viewBox="0 0 64 64" role="img" aria-label="FuelTrack logo" xmlns="http://www.w3.org/2000/svg">
+            <title>FuelTrack Logo</title>
             <defs>
               <linearGradient id="ftFlame" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#fbbf24"/>
