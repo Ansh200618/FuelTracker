@@ -1,21 +1,21 @@
 # FuelTrack — India Route Optimizer
 
 <p align="center">
-  <svg width="320" viewBox="0 0 320 96" role="img" aria-label="FuelTrack logo with stylized fuel gauge" xmlns="http://www.w3.org/2000/svg">
-    <title>FuelTrack logo with stylized fuel gauge</title>
+  <svg width="320" viewBox="0 0 320 96" role="img" aria-label="FuelTrack logo with stylized fuel gauge, FUELTRACK, India Route Optimizer" xmlns="http://www.w3.org/2000/svg">
+    <title>FuelTrack logo with stylized fuel gauge, FUELTRACK, India Route Optimizer</title>
     <defs>
-      <linearGradient id="ftStroke" x1="0" y1="0" x2="1" y2="1">
+      <linearGradient id="readmeFtStroke" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="#fbbf24" />
         <stop offset="100%" stop-color="#ea580c" />
       </linearGradient>
-      <linearGradient id="ftFill" x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id="readmeFtFill" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#fdba74" />
         <stop offset="100%" stop-color="#f59e0b" />
       </linearGradient>
     </defs>
     <rect x="4" y="4" width="88" height="88" rx="22" fill="#0b1526" stroke="#f59e0b55" stroke-width="2"/>
-    <path d="M48 22c8 11 14 17 14 28 0 9-7 16-16 16s-16-7-16-16c0-7 4-12 10-19 2 5 5 8 8 9 1-5 1-10 0-18z" fill="url(#ftFill)"/>
-    <path d="M30 70c7-8 15-8 23 0" fill="none" stroke="url(#ftStroke)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M48 22c8 11 14 17 14 28 0 9-7 16-16 16s-16-7-16-16c0-7 4-12 10-19 2 5 5 8 8 9 1-5 1-10 0-18z" fill="url(#readmeFtFill)"/>
+    <path d="M30 70c7-8 15-8 23 0" fill="none" stroke="url(#readmeFtStroke)" stroke-width="5" stroke-linecap="round"/>
     <circle cx="30" cy="70" r="3" fill="#f59e0b"/>
     <circle cx="53" cy="70" r="3" fill="#f59e0b"/>
     <text x="108" y="47" fill="#f59e0b" font-size="30" font-weight="700" font-family="'JetBrains Mono', 'DM Sans', sans-serif" letter-spacing="1.2">FUELTRACK</text>
