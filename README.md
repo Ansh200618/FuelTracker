@@ -177,7 +177,7 @@ The current repository is intentionally lightweight and centered around one depl
 ### Run Locally
 
 1. Clone the repository.
-2. Open `/home/runner/work/FuelTracker/FuelTracker/index.html` in your browser.
+2. Open `index.html` in your browser.
 
 You can also serve it using any static file server for a more production-like local environment.
 
