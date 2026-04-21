@@ -34,7 +34,8 @@
     .hdr{background:rgba(6,11,20,.94);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:400;backdrop-filter:blur(18px)}
     .hdr-inner{max-width:1380px;margin:0 auto;padding:0 22px;height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .logo{display:flex;align-items:center;gap:10px}
-    .logo-gem{width:38px;height:38px;background:linear-gradient(135deg,#f59e0b,#ea580c);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 0 20px #f59e0b28}
+    .logo-gem{width:40px;height:40px;background:#0b1526;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:1px solid #f59e0b40;box-shadow:0 0 20px #f59e0b28}
+    .logo-gem img{width:100%;height:100%;object-fit:cover;display:block}
     .logo-name{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:1.5px;color:var(--amber)}
     .logo-sub{font-size:7.5px;letter-spacing:3px;color:var(--muted);margin-top:-1px;text-transform:uppercase}
     .hdr-pills{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -149,16 +150,18 @@
 
     @media(max-width:1100px){.rp{grid-template-columns:340px 1fr!important}}
     @media(max-width:920px){.rp,.chat-g,.g4{grid-template-columns:1fr!important}.g3{grid-template-columns:1fr 1fr!important}}
-    @media(max-width:620px){.g2,.g3{grid-template-columns:1fr!important}.wrap{padding:14px 14px}}
+    @media(max-width:620px){.g2,.g3{grid-template-columns:1fr!important}.wrap{padding:14px 14px}.logo-gem{width:34px;height:34px}}
   </style>
 </head>
 <body>
 
   <!-- Static App Shell -->
   <header class="hdr">
-    <div class="hdr-inner">
+      <div class="hdr-inner">
       <div class="logo">
-        <div class="logo-gem">⛽</div>
+        <div class="logo-gem">
+          <img src="https://github.com/user-attachments/assets/575de4d5-d6d7-409b-b8f8-83c64fd0dbd9" alt="FuelTrack logo">
+        </div>
         <div>
           <div class="logo-name">FUELTRACK</div>
           <div class="logo-sub">India Route Optimizer</div>
