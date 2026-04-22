@@ -658,8 +658,11 @@ const chatService = async (msgs) => {
     for (let i = 0; i < delays.length; i++) {
       try {
         const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData?.error?.message || `HTTP ${res.status}`);
+        }
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
 
         const text = (data?.candidates?.[0]?.content?.parts || [])
           .map(p => p?.text || "")
@@ -670,7 +673,8 @@ const chatService = async (msgs) => {
       } catch (err) {
         const isFinalAttempt = (m === models.length - 1) && (i === delays.length - 1);
         if (isFinalAttempt) return "⚠️ Error connecting to Gemini AI. Please check your API key/model access and try again.";
-        await new Promise(r => setTimeout(r, delays[i]));
+        const isModelSwitch = (i === delays.length - 1) && (m < models.length - 1);
+        if (!isModelSwitch) await new Promise(r => setTimeout(r, delays[i]));
       }
     }
   }
