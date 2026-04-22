@@ -635,6 +635,13 @@ const AI_FN_FALLBACK = (q) => {
   return "🤖 **FuelTrack AI is offline.** I can't generate live responses without my API key, but I'm ready when you are!";
 };
 
+const geminiErrorCategory = (msg) => {
+  if (/403|unauthorized|permission|api key|api_key|access/i.test(msg)) return "authentication or permissions issue";
+  if (/404|not found|model/i.test(msg)) return "model not available for this key";
+  if (/network|fetch|timeout/i.test(msg)) return "network issue";
+  return "temporary service issue";
+};
+
 // REAL API INTEGRATION 4: GEMINI 2.5 FLASH AI
 const chatService = async (msgs) => {
   if (!apiKey) {
@@ -672,14 +679,10 @@ const chatService = async (msgs) => {
         if (text) return text;
         throw new Error("Empty Gemini response");
       } catch (err) {
-        lastErrMsg = (err && err.message) ? String(err.message) : "Unknown error";
+        lastErrMsg = err?.message ? String(err.message) : "Unknown error";
         const isFinalAttempt = (m === models.length - 1) && (i === delays.length - 1);
         if (isFinalAttempt) {
-          const safeReason =
-            /403|unauthorized|permission|api key|api_key|access/i.test(lastErrMsg) ? "authentication or permissions issue" :
-            /404|not found|model/i.test(lastErrMsg) ? "model not available for this key" :
-            /network|fetch|timeout/i.test(lastErrMsg) ? "network issue" :
-            "temporary service issue";
+          const safeReason = geminiErrorCategory(lastErrMsg);
           console.error("Gemini request failed:", lastErrMsg);
           return `⚠️ Error connecting to Gemini AI (${safeReason}). Please check your API key/model access and try again.`;
         }
