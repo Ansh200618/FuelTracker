@@ -635,7 +635,14 @@ const AI_FN_FALLBACK = (q) => {
   return "🤖 **FuelTrack AI is offline.** I can't generate live responses without my API key, but I'm ready when you are!";
 };
 
-// REAL API INTEGRATION 4: GEMINI 2.5 FLASH AI
+const categorizeGeminiError = (msg) => {
+  if (/403|unauthorized|permission|api key|api_key|access/i.test(msg)) return "authentication or permissions issue";
+  if (/404|not found|model/i.test(msg)) return "model not available for this key";
+  if (/network|fetch|timeout/i.test(msg)) return "network issue";
+  return "temporary service issue";
+};
+
+// REAL API INTEGRATION: GEMINI WITH STABLE MODEL FALLBACK
 const chatService = async (msgs) => {
   if (!apiKey) {
     await new Promise(r=>setTimeout(r,700+Math.random()*500));
@@ -645,23 +652,51 @@ const chatService = async (msgs) => {
   const systemInstruction = "You are FuelTrack AI, a strict expert on Indian roads, tolls, EVs, and fuel. You MUST ONLY answer questions related to driving, vehicles, fuel prices, tolls, and routes. If the user asks about ANYTHING ELSE (e.g., coding, general knowledge, math, politics, recipes), politely refuse to answer and remind them you are specifically a Fuel & Route assistant. Keep formatting clean. Max 4 sentences.";
   const promptText = msgs.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join("\n") + "\nAssistant:";
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
   const payload = {
     contents: [{ parts: [{ text: promptText }] }],
     systemInstruction: { parts: [{ text: systemInstruction }] }
   };
 
-  // Exponential backoff
-  const delays = [1000, 2000, 4000, 8000, 16000];
-  for (let i = 0; i < 5; i++) {
-    try {
-      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Hmm, I couldn't formulate a response.";
-    } catch(err) {
-      if (i === 4) return "⚠️ Error connecting to Gemini AI. Please try again later.";
-      await new Promise(r => setTimeout(r, delays[i]));
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
+  const delays = [1000, 2000, 4000];
+  let lastErrMsg = "";
+
+  for (let m = 0; m < models.length; m++) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${models[m]}:generateContent?key=${apiKey}`;
+    for (let i = 0; i < delays.length; i++) {
+      try {
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        if (!res.ok) {
+          let errData = {};
+          try { errData = await res.json(); } catch (_) {}
+          throw new Error(errData?.error?.message || `HTTP ${res.status}`);
+        }
+        let data;
+        try {
+          data = await res.json();
+        } catch (_) {
+          throw new Error("Invalid JSON response from Gemini API");
+        }
+
+        const text = (data?.candidates?.[0]?.content?.parts || [])
+          .map(p => p?.text)
+          .filter(Boolean)
+          .join("")
+          .trim();
+        if (text) return text;
+        throw new Error("No valid text content in Gemini response");
+      } catch (err) {
+        lastErrMsg = err?.message ? String(err.message) : "Unknown error";
+        const isFinalAttempt = (m === models.length - 1) && (i === delays.length - 1);
+        if (isFinalAttempt) {
+          const safeReason = categorizeGeminiError(lastErrMsg);
+          console.error("Gemini request failed:", lastErrMsg);
+          return `⚠️ Error connecting to Gemini AI (${safeReason}). Please check your API key/model access and try again.`;
+        }
+        const isModelSwitch = (i === delays.length - 1) && (m < models.length - 1);
+        // No wait when switching models; delay is only for retrying the same model.
+        if (!isModelSwitch) await new Promise(r => setTimeout(r, delays[i]));
+      }
     }
   }
 };
