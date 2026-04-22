@@ -645,23 +645,33 @@ const chatService = async (msgs) => {
   const systemInstruction = "You are FuelTrack AI, a strict expert on Indian roads, tolls, EVs, and fuel. You MUST ONLY answer questions related to driving, vehicles, fuel prices, tolls, and routes. If the user asks about ANYTHING ELSE (e.g., coding, general knowledge, math, politics, recipes), politely refuse to answer and remind them you are specifically a Fuel & Route assistant. Keep formatting clean. Max 4 sentences.";
   const promptText = msgs.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join("\n") + "\nAssistant:";
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
   const payload = {
     contents: [{ parts: [{ text: promptText }] }],
     systemInstruction: { parts: [{ text: systemInstruction }] }
   };
 
-  // Exponential backoff
-  const delays = [1000, 2000, 4000, 8000, 16000];
-  for (let i = 0; i < 5; i++) {
-    try {
-      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Hmm, I couldn't formulate a response.";
-    } catch(err) {
-      if (i === 4) return "⚠️ Error connecting to Gemini AI. Please try again later.";
-      await new Promise(r => setTimeout(r, delays[i]));
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
+  const delays = [1000, 2000, 4000];
+
+  for (let m = 0; m < models.length; m++) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${models[m]}:generateContent?key=${apiKey}`;
+    for (let i = 0; i < delays.length; i++) {
+      try {
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+
+        const text = (data?.candidates?.[0]?.content?.parts || [])
+          .map(p => p?.text || "")
+          .join("")
+          .trim();
+        if (text) return text;
+        throw new Error("Empty Gemini response");
+      } catch (err) {
+        const isFinalAttempt = (m === models.length - 1) && (i === delays.length - 1);
+        if (isFinalAttempt) return "⚠️ Error connecting to Gemini AI. Please check your API key/model access and try again.";
+        await new Promise(r => setTimeout(r, delays[i]));
+      }
     }
   }
 };
