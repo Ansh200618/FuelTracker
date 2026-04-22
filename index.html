@@ -642,7 +642,7 @@ const categorizeGeminiError = (msg) => {
   return "temporary service issue";
 };
 
-// REAL API INTEGRATION 4: GEMINI 2.5 FLASH AI
+// REAL API INTEGRATION: GEMINI WITH STABLE MODEL FALLBACK
 const chatService = async (msgs) => {
   if (!apiKey) {
     await new Promise(r=>setTimeout(r,700+Math.random()*500));
@@ -667,10 +667,16 @@ const chatService = async (msgs) => {
       try {
         const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
+          let errData = {};
+          try { errData = await res.json(); } catch (_) {}
           throw new Error(errData?.error?.message || `HTTP ${res.status}`);
         }
-        const data = await res.json().catch(() => ({}));
+        let data;
+        try {
+          data = await res.json();
+        } catch (_) {
+          throw new Error("Invalid JSON response from Gemini API");
+        }
 
         const text = (data?.candidates?.[0]?.content?.parts || [])
           .map(p => p?.text)
@@ -678,7 +684,7 @@ const chatService = async (msgs) => {
           .join("")
           .trim();
         if (text) return text;
-        throw new Error("Empty Gemini response");
+        throw new Error("No valid text content in Gemini response");
       } catch (err) {
         lastErrMsg = err?.message ? String(err.message) : "Unknown error";
         const isFinalAttempt = (m === models.length - 1) && (i === delays.length - 1);
