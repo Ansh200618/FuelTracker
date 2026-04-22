@@ -652,6 +652,7 @@ const chatService = async (msgs) => {
 
   const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
   const delays = [1000, 2000, 4000];
+  let lastErrMsg = "";
 
   for (let m = 0; m < models.length; m++) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${models[m]}:generateContent?key=${apiKey}`;
@@ -671,8 +672,9 @@ const chatService = async (msgs) => {
         if (text) return text;
         throw new Error("Empty Gemini response");
       } catch (err) {
+        lastErrMsg = (err && err.message) ? String(err.message) : "Unknown error";
         const isFinalAttempt = (m === models.length - 1) && (i === delays.length - 1);
-        if (isFinalAttempt) return "⚠️ Error connecting to Gemini AI. Please check your API key/model access and try again.";
+        if (isFinalAttempt) return `⚠️ Error connecting to Gemini AI: ${lastErrMsg}. Please check your API key/model access and try again.`;
         const isModelSwitch = (i === delays.length - 1) && (m < models.length - 1);
         if (!isModelSwitch) await new Promise(r => setTimeout(r, delays[i]));
       }
