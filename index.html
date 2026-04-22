@@ -635,7 +635,7 @@ const AI_FN_FALLBACK = (q) => {
   return "🤖 **FuelTrack AI is offline.** I can't generate live responses without my API key, but I'm ready when you are!";
 };
 
-const geminiErrorCategory = (msg) => {
+const categorizeGeminiError = (msg) => {
   if (/403|unauthorized|permission|api key|api_key|access/i.test(msg)) return "authentication or permissions issue";
   if (/404|not found|model/i.test(msg)) return "model not available for this key";
   if (/network|fetch|timeout/i.test(msg)) return "network issue";
@@ -673,7 +673,8 @@ const chatService = async (msgs) => {
         const data = await res.json().catch(() => ({}));
 
         const text = (data?.candidates?.[0]?.content?.parts || [])
-          .map(p => p?.text || "")
+          .map(p => p?.text)
+          .filter(Boolean)
           .join("")
           .trim();
         if (text) return text;
@@ -682,11 +683,12 @@ const chatService = async (msgs) => {
         lastErrMsg = err?.message ? String(err.message) : "Unknown error";
         const isFinalAttempt = (m === models.length - 1) && (i === delays.length - 1);
         if (isFinalAttempt) {
-          const safeReason = geminiErrorCategory(lastErrMsg);
+          const safeReason = categorizeGeminiError(lastErrMsg);
           console.error("Gemini request failed:", lastErrMsg);
           return `⚠️ Error connecting to Gemini AI (${safeReason}). Please check your API key/model access and try again.`;
         }
         const isModelSwitch = (i === delays.length - 1) && (m < models.length - 1);
+        // No wait when switching models; delay is only for retrying the same model.
         if (!isModelSwitch) await new Promise(r => setTimeout(r, delays[i]));
       }
     }
