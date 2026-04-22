@@ -674,7 +674,15 @@ const chatService = async (msgs) => {
       } catch (err) {
         lastErrMsg = (err && err.message) ? String(err.message) : "Unknown error";
         const isFinalAttempt = (m === models.length - 1) && (i === delays.length - 1);
-        if (isFinalAttempt) return `⚠️ Error connecting to Gemini AI: ${lastErrMsg}. Please check your API key/model access and try again.`;
+        if (isFinalAttempt) {
+          const safeReason =
+            /403|unauthorized|permission|api key|api_key|access/i.test(lastErrMsg) ? "authentication or permissions issue" :
+            /404|not found|model/i.test(lastErrMsg) ? "model not available for this key" :
+            /network|fetch|timeout/i.test(lastErrMsg) ? "network issue" :
+            "temporary service issue";
+          console.error("Gemini request failed:", lastErrMsg);
+          return `⚠️ Error connecting to Gemini AI (${safeReason}). Please check your API key/model access and try again.`;
+        }
         const isModelSwitch = (i === delays.length - 1) && (m < models.length - 1);
         if (!isModelSwitch) await new Promise(r => setTimeout(r, delays[i]));
       }
