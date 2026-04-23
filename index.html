@@ -644,9 +644,10 @@ const categorizeGeminiError = (msg) => {
 
 // REAL API INTEGRATION: GEMINI WITH STABLE MODEL FALLBACK
 const chatService = async (msgs) => {
+  const lastUserPrompt = msgs[msgs.length-1]?.content || "";
   if (!apiKey) {
     await new Promise(r=>setTimeout(r,700+Math.random()*500));
-    return AI_FN_FALLBACK(msgs[msgs.length-1]?.content||"");
+    return AI_FN_FALLBACK(lastUserPrompt);
   }
 
   const systemInstruction = "You are FuelTrack AI, a strict expert on Indian roads, tolls, EVs, and fuel. You MUST ONLY answer questions related to driving, vehicles, fuel prices, tolls, and routes. If the user asks about ANYTHING ELSE (e.g., coding, general knowledge, math, politics, recipes), politely refuse to answer and remind them you are specifically a Fuel & Route assistant. Keep formatting clean. Max 4 sentences.";
@@ -657,7 +658,12 @@ const chatService = async (msgs) => {
     systemInstruction: { parts: [{ text: systemInstruction }] }
   };
 
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
+  const models = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro"
+  ];
   const delays = [1000, 2000, 4000];
   let lastErrMsg = "";
 
@@ -690,8 +696,9 @@ const chatService = async (msgs) => {
         const isFinalAttempt = (m === models.length - 1) && (i === delays.length - 1);
         if (isFinalAttempt) {
           const safeReason = categorizeGeminiError(lastErrMsg);
+          const fallback = AI_FN_FALLBACK(lastUserPrompt);
           console.error("Gemini request failed:", lastErrMsg);
-          return `⚠️ Error connecting to Gemini AI (${safeReason}). Please check your API key/model access and try again.`;
+          return `⚠️ Error connecting to Gemini AI (${safeReason}). Showing offline assistant response.\n\n${fallback}`;
         }
         const isModelSwitch = (i === delays.length - 1) && (m < models.length - 1);
         // No wait when switching models; delay is only for retrying the same model.
