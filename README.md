@@ -309,3 +309,10 @@ If you intend to open-source this project formally, add a standard license (for 
 ### Maintainer Note
 
 If you are the project owner, consider rotating and externalizing API keys before wider publication.
+
+## Support Development
+
+This project is free and open source. If you find it useful, you can support continued development through:
+
+- [GitHub Sponsors](https://github.com/sponsors/anshdeepofficial)
+- [Buy Me a Coffee](https://buymeacoffee.com/anshdeepofficial)
