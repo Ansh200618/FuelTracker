@@ -1,4 +1,4 @@
-# FuelTrack — India Route Optimizer
+# FuelTrack — India Route Optimizer`n`n<p align="center">`n  <a href="https://github.com/sponsors/anshdeepofficial"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" height="40" /></a>`n  <a href="https://buymeacoffee.com/anshdeepofficial"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="40" /></a>`n</p>
 
 <p align="center">
   <img src="Logo/FUEL%20TRACKER%20WIDE.png" alt="Fuel Tracker wide logo" width="520" />
@@ -309,10 +309,3 @@ If you intend to open-source this project formally, add a standard license (for 
 ### Maintainer Note
 
 If you are the project owner, consider rotating and externalizing API keys before wider publication.
-
-## Support Development
-
-This project is free and open source. If you find it useful, you can support continued development through:
-
-- [GitHub Sponsors](https://github.com/sponsors/anshdeepofficial)
-- [Buy Me a Coffee](https://buymeacoffee.com/anshdeepofficial)
